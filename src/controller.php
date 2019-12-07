@@ -34,7 +34,6 @@ class Controller extends Config
 
         list ($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, $err) = $this->getUrl();
         if (isset($err)) { return $err; }
-var_dump($action);
         if (empty($c->{"Chartags"}) || empty($c->{"Chartags"}->{$tag_name})) {
             return new Gerror(404);
         }
@@ -66,8 +65,6 @@ var_dump($action);
         if (empty($this->components[$comp_name]) ||
             empty($this->components[$comp_name]->{"actions"}) ||
             empty($this->components[$comp_name]->{"actions"}->{$action})) {
-var_dump($action);
-var_dump(333);
             return new Gerror(404);
         }
 
@@ -257,8 +254,6 @@ var_dump(333);
                     $url_key = $patterns[1];
                 }
             }
-var_dump(9999);
-var_dump($action);
 			return array($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, null);
         }
 
@@ -271,13 +266,6 @@ var_dump($action);
         $action = isset($_REQUEST[$c->{"Action_name"}])
         ? $_REQUEST[$c->{"Action_name"}]
         : $c->{"Default_actions"}->{$_SERVER["REQUEST_METHOD"]};
-var_dump(8888);
-var_dump($c->{"Action_name"});
-var_dump($_REQUEST);
-var_dump(7777);
-var_dump($_GET);
-var_dump(6666);
-var_dump($_SERVER["REQUEST_URI"]);
 		return array($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, null);
 	}
 }
