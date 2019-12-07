@@ -2,7 +2,7 @@
 declare (strict_types = 1);
 
 namespace Genelet;
-use PDO
+use PDO;
 
 include_once "controller.php";
 
