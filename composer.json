@@ -1,0 +1,16 @@
+{
+    "name": "genelet/php",
+    "description": "PHP version of Genelet web development framework",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Greetingland, LLC",
+            "email": "genelet@gmail.com"
+        }
+    ],
+    "require": {
+        "twig/twig": "^3.0",
+        "psr/log": "^1.1",
+        "psr/simple-cache": "^1.0"
+    }
+}
