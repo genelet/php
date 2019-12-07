@@ -56,7 +56,9 @@ class Controller extends Config
             return new Gerror(200, $this->login_page($role_name, $tag_name, $err));
         }
 
-        if (empty($this->components[$comp_name])) {
+        if (empty($this->components[$comp_name]) ||
+            empty($this->components[$comp_name]->{"actions"}) ||
+            empty($this->components[$comp_name]->{"actions"}->{$comp_name})) {
             return new Gerror(404);
         }
         $filter_name = ($c->{"Project"} === "Genelet")
