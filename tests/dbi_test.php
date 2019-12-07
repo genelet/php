@@ -1,5 +1,6 @@
 <?php
 declare (strict_types = 1);
+namespace Genelet\Tests;
 include '../src/config.php';
 
 use PHPUnit\Framework\TestCase;
@@ -11,7 +12,7 @@ final class DbiTest extends TestCase
     public function testCreatedDbi(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $pdo = new PDO(...$conf->config->{"Db"});
+        $pdo = new \PDO(...$conf->config->{"Db"});
         $this->assertInstanceOf(
             Dbi::class,
             new Dbi($pdo)
@@ -21,7 +22,7 @@ final class DbiTest extends TestCase
     public function testDbiExec(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $pdo = new PDO(...$conf->config->{"Db"});
+        $pdo = new \PDO(...$conf->config->{"Db"});
         $dbi = new Dbi($pdo);
         $err = $dbi->Exec_sql(
             "drop table if exists testing_f");
@@ -42,7 +43,7 @@ final class DbiTest extends TestCase
     public function testDbiDoSelect(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $pdo = new PDO(...$conf->config->{"Db"});
+        $pdo = new \PDO(...$conf->config->{"Db"});
         $dbi = new Dbi($pdo);
         $err = $dbi->Exec_sql(
             "drop table if exists testing_f");
@@ -86,7 +87,7 @@ final class DbiTest extends TestCase
     public function testDbiProcedure(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $pdo = new PDO(...$conf->config->{"Db"});
+        $pdo = new \PDO(...$conf->config->{"Db"});
         $dbi = new Dbi($pdo);
         $err = $dbi->Exec_sql(
             "drop table if exists testing_f");

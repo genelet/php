@@ -1,5 +1,6 @@
 <?php
 declare (strict_types = 1);
+namespace Genelet\Tests;
 include '../src/config.php';
 
 use PHPUnit\Framework\TestCase;
@@ -11,7 +12,7 @@ final class CrudTest extends TestCase
     public function testCreatedCrud(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $pdo = new PDO(...$conf->config->{"Db"});
+        $pdo = new \PDO(...$conf->config->{"Db"});
         $this->assertInstanceOf(
             Crud::class,
             new Crud($pdo, "testing")
@@ -21,7 +22,7 @@ final class CrudTest extends TestCase
     public function testCrudExec(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $pdo = new PDO(...$conf->config->{"Db"});
+        $pdo = new \PDO(...$conf->config->{"Db"});
         $crud = new Crud($pdo, "testing");
         $err = $crud->Exec_sql(
             "drop table if exists testing_f");
@@ -37,7 +38,7 @@ final class CrudTest extends TestCase
     public function testCrudStrings(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $pdo = new PDO(...$conf->config->{"Db"});
+        $pdo = new \PDO(...$conf->config->{"Db"});
         $crud = new Crud($pdo, "testing");
 
         $select_pars = array("a", "b", "c", "d");
@@ -87,7 +88,7 @@ final class CrudTest extends TestCase
     public function testCrudActions(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $pdo = new PDO(...$conf->config->{"Db"});
+        $pdo = new \PDO(...$conf->config->{"Db"});
         $crud = new Crud($pdo, "testing");
 
         $err = $crud->Exec_sql(

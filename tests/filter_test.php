@@ -1,5 +1,6 @@
 <?php
 declare (strict_types = 1);
+namespace Genelet\Tests;
 include "../src/model.php";
 
 use PHPUnit\Framework\TestCase;
@@ -78,7 +79,7 @@ final class FilterTest extends TestCase
         $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("../conf/test.conf")), "m", "e", "db");
 		$ARGS =& $filter->ARGS;
 
-        $pdo = new PDO(...$filter->config->{"Db"});
+        $pdo = new \PDO(...$filter->config->{"Db"});
         $model = new Model($pdo, self::init());
         $err = $model->Exec_sql(
             "drop table if exists testing_f");
@@ -139,7 +140,7 @@ final class FilterTest extends TestCase
         $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("../conf/test.conf")), "m", "e", "db");
 		$ARGS =& $filter->ARGS;
 
-        $pdo = new PDO(...$filter->config->{"Db"});
+        $pdo = new \PDO(...$filter->config->{"Db"});
         $model = new Model($pdo, self::init());
         $err = $model->Exec_sql(
             "drop table if exists testing_f");

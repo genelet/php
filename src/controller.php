@@ -34,54 +34,56 @@ class Controller extends Config
 
         list ($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, $err) = $this->getUrl();
         if (isset($err)) { return $err; }
-
+var_dump($action);
         if (empty($c->{"Chartags"}) || empty($c->{"Chartags"}->{$tag_name})) {
             return new Gerror(404);
         }
 
         if ($role_name != $c->{"Pubrole"}) {
-            if (empty($c->{"Role"}) || empty($c->{"Role"}->{$role_name})) {
+            if (empty($c->{"Roles"}) || empty($c->{"Roles"}->{$role_name})) {
                 return new Gerror(404);
             }
-        }
 
-        if ($this->Is_logout($role_name)) {
-            $gate = new Gate($c, $role_name, $tag_name);
-			if ($gate->Is_public()) { return new Gerror(404); }
-            return $gate->Handler_logout();
-        } elseif ($this->Is_oauth2($comp_name) || $this->Is_login($comp_name)) {
-            $dbi = new Dbi($this->pdo);
-            $ticket = $this->Is_oauth2($comp_name)
-            ? new Oauth2($dbi, null, $c, $role_name, $tag_name, $comp_name)
-            : isset($_REQUEST[$c->{"Provider_name"}])
-            ? new Procedure($dbi, null, $c, $role_name, $tag_name, $_REQUEST[$c->{"Provider_name"}])
-            : new Procedure($dbi, null, $c, $role_name, $tag_name);
-			if ($ticket->Is_public()) { return new Gerror(404); }
-            $err = $ticket->Handler();
-			if ($err === null) { return new Gerror(401); }
-            if ($err->error_code == 303) { // success for json and html is 303
-                return $err;
+            if ($this->Is_logout($comp_name)) {
+                $gate = new Gate($c, $role_name, $tag_name);
+                return $gate->Handler_logout();
+            } elseif ($this->Is_login($comp_name) || $this->Is_oauth2($comp_name)) {
+                $dbi = new Dbi($this->pdo);
+                $ticket = $this->Is_oauth2($comp_name)
+                ? new Oauth2($dbi, null, $c, $role_name, $tag_name, $comp_name)
+                : isset($_REQUEST[$c->{"Provider_name"}])
+                ? new Procedure($dbi, null, $c, $role_name, $tag_name, $_REQUEST[$c->{"Provider_name"}])
+                : new Procedure($dbi, null, $c, $role_name, $tag_name);
+			    if ($ticket->Is_public()) { return new Gerror(404); }
+                $err = $ticket->Handler();
+			    if ($err === null) { return new Gerror(401); }
+                if ($err->error_code == 303) { // success is 303
+                    return $err;
+                } // all other cases are login page error
+                return new Gerror(200, $this->login_page($role_name, $tag_name, $err));
             }
-            // all other cases are login page error
-            return new Gerror(200, $this->login_page($role_name, $tag_name, $err));
         }
-
         if (empty($this->components[$comp_name]) ||
             empty($this->components[$comp_name]->{"actions"}) ||
             empty($this->components[$comp_name]->{"actions"}->{$action})) {
+var_dump($action);
+var_dump(333);
             return new Gerror(404);
         }
+
+		if (!empty($url_key) && $cache_type===0) { // GET request with 4 in url
+			$_REQUEST[$filter->getCurrentKey()] = $url_key;
+		}
+        $OLD = $_REQUEST;
+
         $filter_name = ($c->{"Project"} === "Genelet")
         ? '\\Genelet\\Filter'
         : '\\' . $c->{"Project"} . '\\' . ucfirst($comp_name) . '\\Filter';
         $filter = new $filter_name($this->components[$comp_name], $action, $comp_name, $c, $role_name, $tag_name);
-        if ((!$filter->Is_public() && !$filter->Is_admin() && !$filter->Is_normal_role())) {
-            return new Gerror(401);
-        }
-        $OLD = $_REQUEST;
+
         if (!$filter->Is_public()) {
             $err = $filter->Forbid();
-            if ($err != null) {return $err;} // for json is 200 and html is 303
+            if ($err != null) {return $err;} // for authentication is 303
         }
         if (!$filter->Role_can()) {
             return new Gerror(401);
@@ -91,17 +93,13 @@ class Controller extends Config
             return $filter->Login_as();
         }
 
-		if (!empty($url_key) && $cache_type===0) { // GET request with 4 in url
-			$_REQUEST[$filter->getCurrentKey()] = $url_key;
-		}
-
 		$ttl = $c->{"Ttl"};
 		if (isset($filter->actionHash["ttl"])) { $ttl = $filter->actionHash["ttl"]; }
 		$cache = new Cache($c, $role_name, $tag_name, $action, $comp_name, $cache_type, $ttl);
 		if ($cache_type>0) {
 			if ($cache->has($url_key)) {
 				return new Gerror(200, $cache->get($url_key));
-			 } elseif ($cache_type===1) {
+			 } elseif ($cache_type===1) { // GET id request
 				$_REQUEST[$filter->getCurrentKey()] = $url_key;
 			 } elseif ($cache_type===2 && !empty($url_key)) {
 				$queries = unserialize(base64_decode(str_replace(['-','_'], ['+','/'], $url_key)));
@@ -259,6 +257,8 @@ class Controller extends Config
                     $url_key = $patterns[1];
                 }
             }
+var_dump(9999);
+var_dump($action);
 			return array($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, null);
         }
 
@@ -271,6 +271,13 @@ class Controller extends Config
         $action = isset($_REQUEST[$c->{"Action_name"}])
         ? $_REQUEST[$c->{"Action_name"}]
         : $c->{"Default_actions"}->{$_SERVER["REQUEST_METHOD"]};
+var_dump(8888);
+var_dump($c->{"Action_name"});
+var_dump($_REQUEST);
+var_dump(7777);
+var_dump($_GET);
+var_dump(6666);
+var_dump($_SERVER["REQUEST_URI"]);
 		return array($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, null);
 	}
 }

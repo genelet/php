@@ -1,7 +1,8 @@
 <?php
 declare (strict_types = 1);
-namespace Genelet;
+namespace Genelet\Tests;
 
+include_once "../src/logger.php";
 use PHPUnit\Framework\TestCase;
 use Genelet\Logger;
 

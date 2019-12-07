@@ -46,6 +46,9 @@ class Config
         if (empty($this->config->{"JsonURL_name"})) {
             $this->config->{"JsonURL_name"} = "json_url";
         }
+        if (empty($this->config->{"Ttl"})) {
+            $this->config->{"Ttl"} = 3600;
+        }
 		if (empty($this->config->{"Default_actions"})) {
 			$this->config->{"Default_actions"} = json_decode('{"GET":"dashboard", "GET_item":"edit", "PUT":"update", "POST":"insert", "DELETE":"delete"}');
 		}
