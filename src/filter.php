@@ -1,0 +1,216 @@
+<?php
+declare (strict_types = 1);
+
+namespace Genelet;
+use PDO;
+
+include 'gate.php';
+include 'procedure.php';
+
+class Filter extends Gate
+{
+	public $ARGS;
+
+	public $Action; //		string
+	public $Component; //	string
+	public $Actions; //		map[string]map[string][]string
+	public $Fks; //			map[string][]string
+
+	public $actionHash;
+	public $fkArray;
+	private $current_key;
+
+	public function __construct(object $comp, string $a_name, string $c_name, object $c, string $rv, string $cv) {
+        parent::__construct($c, $rv, $cv);
+		$this->Action = $a_name;
+		$this->Component = $c_name;
+        self::Initialize($comp);
+		$this->ARGS =& $_REQUEST;
+    }
+
+    private function Initialize(object $comp) : void {
+	    $this->current_key = $comp->{"current_key"};
+		$hash = array();
+		foreach ($comp->{"actions"} as $action => $obj_item) {
+			$item = array();
+			foreach ($obj_item as $k => $obj_vs) {
+				$vs = array();
+				foreach ($obj_vs as $v) {
+					array_push($vs, $v);
+				}
+				$item[$k] = $vs;
+			}
+			$hash[$action] = $item;
+			if ($this->Action === $action) { $this->actionHash = $item; }
+		}
+		$this->Actions = $hash;
+		if (isset($comp->{"fks"})) {
+			$fks = array();
+			foreach ($comp->{"fks"} as $role => $obj_fk) {
+				$fk = array();
+				foreach ($obj_fk as $v) {
+					array_push($fk, $v);
+				}
+				$fks[$role] = $fk;
+			}
+			$this->Fks = $fks;
+			if (isset($fks[$this->Role_name])) {
+				$this->fkArray = $fks[$this->Role_name];
+			}
+		}
+	}
+
+	public function getCurrentKey() : string {
+		return $this->current_key;
+	}
+
+	public function Role_can() : bool {
+		if ($this->Is_admin()) {return true;}
+		if (empty($this->actionHash["groups"])) {return false;}
+		return array_search($this->Role_name, $this->actionHash["groups"])>=0;
+	}
+
+    private function DigestWithinLogin(string $str) : string {
+        $idname = $this->Get_idname();
+        $value_idname = $this->ARGS[$idname];
+		return $this->Digest($this->Role_name . $idname . $value_idname . $str);
+    }
+
+	private function TokenWithinLogin(int $stamp) : string {
+		$idname = $this->Get_idname();
+		$value_idname = $this->ARGS[$idname];
+		return $this->Token($stamp, $this->Role_name . $idname . $value_idname);
+	}
+
+	// "upload":{"field1":"name1","field2":"name2",...}
+	// file will be moved to folder Uploaddir/role/name1/
+	// or Uploaddir/role/ID_value/, if name1 matched its role-id name
+	protected function upload() : ?Gerror {
+		foreach ($_FILES as $field => $image) {
+			if ($image["error"] !== UPLOAD_ERR_OK) {
+				return new Gerror(3207, "Upload internal: ".$image["error"]);
+			}
+			$item = $this->actionHash["upload"][$field];
+			$uploadfile = $this->config["Uploaddir"]."/".$this->Role_name."/";
+			$uploadfile .= (!$this->Is_public() && $item===$this->Get_idname()) ? $_REQUEST[$item] : $item;
+			if (!file_exists($uploadfile)) {
+				mkdir($uploadfile, 0777, true);
+			}
+			$uploadfile .= "/" . basename($image['name']);
+			$ok = move_uploaded_file($image['tmp_name'], $uploadfile);
+			if ($ok) {
+				$_REQUEST[$field] = $uploadfile;
+			} else {
+				return new Gerror(3208, "Upload error: ".$image["name"]);
+			}
+		}
+		return null;
+	}
+
+	public function Preset() : ?Gerror {
+		if (isset($this->actionHash["upload"]) && !empty($_FILES)) {
+			$err = $this->upload();
+			if ($err != null) { return $err;}
+		}
+		if (isset($this->actionHash["options"]) && array_search("csrf", $this->actionHash["options"]) !== false) {
+			if (empty($_POST[$this->config["Csrf_name"]])) {
+				return new Gerror(3209);
+			}
+			$token = $_POST[$this->config["Csrf_name"]];
+			$stamp = Access::Get_tokentime($token);
+			if ($token !== $this->TokenWithinLogin($stamp)) {
+				return new Gerror(3210);
+			}
+		}
+
+		return null;
+	}
+
+	public function Before(object $model, array &$extra, array &$nextextra)  : ?Gerror {
+		$ARGS = $this->ARGS;
+		if (isset($this->actionHash["validate"])) {
+			foreach ($this->actionHash["validate"] as $k) {
+				if (empty($ARGS[$k])) {
+					return new Gerror(1035, $k);
+				}
+			}
+		}
+		if (isset($this->fkArray) && isset($this->fkArray[0])) {
+			$name = $this->fkArray[0];
+			if (empty($ARGS[$name])) {return new Gerror(1041);}
+			$value = $ARGS[$name];
+			$extra[$name] = $value;	
+			if ($name===$this->Get_idname()) {return null;}
+			if (empty($this->fkArray[1]) || empty($ARGS[$this->fkArray[1]])) {return new Gerror(1054);}
+			$md5 = $ARGS[$this->fkArray[1]];
+			if ($ARGS[$this->fkArray[1]] != $this->DigestWithinLogin($name . $value)) {
+				return new Gerror(1052);
+			}
+		}
+
+		return null;
+	}
+
+	public function After(object $model) : ?Gerror {
+		if (isset($this->fkArray) && !empty($model->LISTS)) {
+			$fk = $this->fkArray;
+			while (sizeof($fk)>3) {
+				foreach ($model->LISTS as &$item) {
+					$name = $fk[2];
+					if (empty($item[$name])) { continue;}
+					$value = $item[$name];
+					$item[$fk[3]] = $this->DigestWithinLogin($name . $value);
+				}
+				array_shift($fk);
+				array_shift($fk);
+			}
+		}
+		if (!$this->Is_public()) {
+			$idname = $this->Get_idname();
+			$value_idname = $this->ARGS[$idname];
+			$model->OTHER[$this->config->{"Csrf_name"}] = $this->TokenWithinLogin(intval($_SERVER["REQUEST_TIME"]));
+		}
+		if ($_SERVER["REQUEST_METHOD"]==="GET" || $_SERVER["REQUEST_METHOD"]==="GET_item") {
+			$c = $this->config;
+			$name = "";
+			if ($this->Action === $c->{"Default_actions"}->{"GET_item"}) {
+				$name = $_REQUEST[$this->current_key];
+			} else {
+				$name = $this->Action;
+				if (!empty($_GET)) {
+					$name .= "_" . str_replace(['+','/','='], ['-','_',''], base64_encode(serialize($_GET)));
+				}
+			}
+			$this->Role_name . 
+			$model->OTHER[$c->{"CacheURL_name"}] = $c->{"Script"} . "/" . $this->Role_name . "/" . $this->Component . "/" . $name . "." . $this->Tag_name;
+        	$parts = explode("/", $_SERVER["REQUEST_URI"]);
+        	$parts[3] = "json";
+        	$model->OTHER[$c->{"JsonURL_name"}] = implode("/", $parts);
+		}
+		return null;
+	}
+
+    public function Login_as() : ?Gerror {
+        $ARGS = $this->ARGS;
+        $c    = $this->config;
+        if (empty($ARGS[$c->{"Roleas_name"}]) || empty($ARGS[$c->{"Roleas_md5"}]) || empty($ARGS[$c->{"Provider_name"}]) || empty($ARGS[$c->{"Roleas_uri"}])) {
+            return new Gerror(3332, "missing one of values: " . implode(", ", array($c->{"Roleas_name"}, $c->{"Roleas_md5"}, $c->{"Roleas_uri"}, $c->{"Provider_name"})));
+        }
+		$ticket = new Procedure(new Dbi(new PDO(...$c->{"Db"})), $ARGS[$c->{"Roleas_uri"}], $c, $ARGS[$c->{"Roleas_name"}], $this->Tag_name, $ARGS[$c->{"Provider_name"}]);
+        if ($ticket->Is_admin()) {
+            return new Gerror(403);
+        }
+        $tmp_login = $ticket->Get_issuer()->{"Credential"}[0];
+        if (empty($ARGS[$tmp_login])) {
+            return new Gerror(3333, "missing: ".$tmp_login);
+        }
+		$tmp_value = $ARGS[$tmp_login];
+        if ($ARGS[$c->{"Roleas_md5"}] !== $this->DigestWithinLogin($ticket->Role_name.$tmp_login.$tmp_value)) {
+            return new Gerror(3334);
+        }
+        $err = $ticket->Authenticate_as($tmp_value);
+        if ($err !== null) { return $err;}
+        return $ticket->Handler_fields();
+    }
+
+}

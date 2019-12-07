@@ -1,0 +1,100 @@
+<?php
+declare (strict_types = 1);
+namespace Genelet;
+
+include_once 'config.php';
+include_once 'error.php';
+
+class Base extends Config
+{
+    public $Role_name;
+    public $Tag_name;
+    protected $role_obj;
+    protected $tag_obj;
+
+    public function __construct(object $c, string $rv, string $cv)
+    {
+        parent::__construct($c);
+        $this->Role_name = $rv;
+        $this->Tag_name = $cv;
+		if (empty($c->{"Roles"}->{$rv})) {
+			if ($rv!==$c->{"Pubrole"}) {
+				throw new Exception("Invalid role");
+			}
+			return;
+		}
+		$this->role_obj = $c->{"Roles"}->{$rv};
+        if (empty($c->{"Chartags"}->{$cv})) {
+            throw new Exception("Invalid tag");
+        }
+        $this->tag_obj = $c->{"Chartags"}->{$cv};
+    }
+
+	public function Is_admin() : bool {
+		if ($this->Is_public()===true) {return false;}
+		return $this->role_obj->{"Is_admin"};
+	}
+
+	public function Is_public() : bool {
+		return $this->config->{"Pubrole"}===$this->Role_name;
+	}
+
+	public function Is_normal_role() : bool {
+		if ($this->Is_public()===true || $this->Is_admin()===true) {return false;}
+		return !empty($this->role_obj);
+	}
+
+	public function Is_json() : bool {
+		return parent::Is_json_tag($this->Tag_name);
+	}
+
+    public function Get_idname(): string {
+		return $this->role_obj->{"Id_name"};
+	}
+
+    public function Get_ip(): string
+    {
+        if (isset($_SERVER['HTTP_CLIENT_IP'])) {
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else {
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }
+        return $ip;
+    }
+
+    private function _set_cookie(string $name, string $value, int $current) : void
+	{
+		if ($this->Is_public()) { return; }
+		$role = $this->role_obj;
+        $domain = isset($role->{"Domain"}) ? $role->{"Domain"} : $_SERVER["HTTP_HOST"];
+        $path = isset($role->{"Path"}) ? $role->{"Path"} : "/";
+		$_COOKIE["SET_COOKIE"][$name] = $value; // cli to get headers_list()
+		$exp = ($current>0) ? $current+$role->{"Duration"} : $current;
+        setcookie($name, $value, $exp, $path, $domain);
+    }
+
+    public function Set_cookie(string $name, string $value) : void
+    {
+		$this->_set_cookie($name, $value, intval($_SERVER["REQUEST_TIME"]));
+    }
+
+    public function Set_cookie_session(string $name, string $value) : void
+    {
+        $this->_set_cookie($name, $value, 0);
+    }
+
+    public function Set_cookie_expire(string $name) : void
+    {
+        $this->_set_cookie($name, "0", -365 * 24 * 3600);
+    }
+
+	static public function base64_encode_url(string $string) : string {
+    	return str_replace(['+','/','='], ['-','_',''], base64_encode($string));
+	}
+
+	static public function base64_decode_url(string $string) : string {
+    	return base64_decode(str_replace(['-','_'], ['+','/'], $string));
+	}
+}
