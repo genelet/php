@@ -32,8 +32,18 @@ class Controller extends Config
             return new Gerror(405);
         }
 
-		list ($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, $err) = $this->getUrl();
-		if (isset($err)) { return $err; }
+        list ($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, $err) = $this->getUrl();
+        if (isset($err)) { return $err; }
+
+        if (empty($c->{"Chartags"}) || empty($c->{"Chartags"}->{$tag_name})) {
+            return new Gerror(404);
+        }
+
+        if ($role_name != $c->{"Pubrole"}) {
+            if (empty($c->{"Role"}) || empty($c->{"Role"}->{$role_name})) {
+                return new Gerror(404);
+            }
+        }
 
         if ($this->Is_logout($role_name)) {
             $gate = new Gate($c, $role_name, $tag_name);
@@ -58,7 +68,7 @@ class Controller extends Config
 
         if (empty($this->components[$comp_name]) ||
             empty($this->components[$comp_name]->{"actions"}) ||
-            empty($this->components[$comp_name]->{"actions"}->{$comp_name})) {
+            empty($this->components[$comp_name]->{"actions"}->{$action})) {
             return new Gerror(404);
         }
         $filter_name = ($c->{"Project"} === "Genelet")

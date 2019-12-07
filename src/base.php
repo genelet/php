@@ -17,15 +17,8 @@ class Base extends Config
         parent::__construct($c);
         $this->Role_name = $rv;
         $this->Tag_name = $cv;
-		if (empty($c->{"Roles"}->{$rv})) {
-			if ($rv!==$c->{"Pubrole"}) {
-				throw new Exception("Invalid role");
-			}
-			return;
-		}
-		$this->role_obj = $c->{"Roles"}->{$rv};
-        if (empty($c->{"Chartags"}->{$cv})) {
-            throw new Exception("Invalid tag");
+        if ($c->{"Pubrole"} != $rv) {
+		    $this->role_obj = $c->{"Roles"}->{$rv};
         }
         $this->tag_obj = $c->{"Chartags"}->{$cv};
     }
