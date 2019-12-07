@@ -26,9 +26,10 @@ class Beacon extends Controller {
 	}
 
 	private function refresh(string $obj, string $query=null) : void {
-		global $_SERVER = array();
-		global $_REQUEST= array();
-		global $_COOKIE = array();
+		global $_SERVER, $_REQUEST, $_COOKIE;
+		$_SERVER = array();
+		$_REQUEST= array();
+		$_COOKIE = array();
 
 		$_SERVER['HTTP_HOST'] = "localhost";
 		$_SERVER['SCRIPT_NAME'] = $this->config->{"Script"};
