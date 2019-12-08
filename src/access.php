@@ -120,7 +120,7 @@ class Access extends Base
             return array("", "", "", "", "", new Gerror(1022));
         }
 		
-        if (array_search($login, $role->userlist) === false) {
+        if (!empty($role->userlist) && array_search($login, $role->userlist) === false) {
             return array("", "", "", "", "", new Gerror(1021));
         }
 
