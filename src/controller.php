@@ -6,7 +6,6 @@ use Twig;
 
 include_once 'config.php';
 include_once 'cache.php';
-// require_once __DIR__ . '/../vendor/autoload.php';
 
 class Controller extends Config
 {
