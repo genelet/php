@@ -126,10 +126,17 @@ final class ControllerTest extends TestCase
 		$this->assertEquals("Not Found", $err->error_string);
 
         $_SERVER["REQUEST_URI"] = "/bb/m/e/t?action=act";
+		$_REQUEST["action"] = "act";
+		$err = $controller->Run();
+		$this->assertIsObject($err);
+		$this->assertEquals(404, $err->error_code);
+
+        $_SERVER["REQUEST_URI"] = "/bb/m/e/t?action=topics";
+		$_REQUEST["action"] = "topics";
 		$err = $controller->Run();
 		$this->assertIsObject($err);
 		$this->assertEquals(303, $err->error_code);
-		$this->assertEquals("/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Ft%3Faction%3Dact&go_err=1025&role=m&tag=e&provider=db", $err->error_string);
+		$this->assertEquals("/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Ft%3Faction%3Dtopics&go_err=1025", $err->error_string);
 
 		$_SERVER["REQUEST_URI"] = $err->error_string;
 		$err = $controller->Run();
@@ -155,17 +162,17 @@ final class ControllerTest extends TestCase
 		$err = $controller->Run();
 		$this->assertIsObject($err);
 		$this->assertEquals(303, $err->error_code);
-		$this->assertEquals("/bb/m/e/t?action=act", $err->error_string);
+		$this->assertEquals("/bb/m/e/t?action=topics", $err->error_string);
 
 		unset($_REQUEST["email"]);
 		unset($_REQUEST["passwd"]);
 		$_SERVER["REQUEST_URI"] = $err->error_string;
 		$_REQUEST["action"] = "act";
-		$_COOKIE["mc"] = "EMfM_hA1YUTTAn9p782Sj4qzAtLYB6Uvr6lucNYhEZ8_1zcvv85NXVIxvjvkl4HAs_nfEVczsgtK8ccritjHTn6959gLNzKAaRuIASn7-3m8phBSQ_hWh1KsU6RJheltz3LQ1fFf8a29XteaTNmKX9tNAnQB-MmuYyWO7hJxqxc";
+		$_COOKIE["mc"] = "gEbtIcunRGFmNgEHJrxbm53j4ZgzfCJcjwqbygPYhOMRaM2qDqVP9hXvJ7_ybp5AiDtBIL_atxYRp-F5wU86KFYG5SQs1CKI251n0kVcEr6oUHpc8IeYZMzIyLb1ggqQHwoaJNH11eirGUi1iOj0NZYMxqJwzTkrjKViWwvXq90";
         $err = $controller->Run();
 		$this->assertIsObject($err);
-		$this->assertEquals(401, $err->error_code);
-		$this->assertEquals("Unauthorized", $err->error_string);
+		$this->assertEquals(404, $err->error_code);
+		$this->assertEquals("Not Found", $err->error_string);
 
 		$_SERVER["REQUEST_URI"] = "/bb/m/e/t?action=edit";
 		$_REQUEST["action"] = "edit";
@@ -182,7 +189,7 @@ final class ControllerTest extends TestCase
         $err = $controller->Run();
 		$this->assertIsObject($err);
 		$this->assertEquals(200, $err->error_code);
-		$this->assertEquals('{"success":true,"incoming":{"action":"edit","id":4},"included":[{"x":"ddd","y":"www","z":"1","id":"4","id_md5":"np0baH86baQeyk1Zxz3Z0oXJFSezATsvXPC3flXxwuw"}],"relationships":{"csrf_token":"AAAAAChiLVJ38tK1jhVzmuNNTV6gjS6Zc3zJD6qV05NWydwF","cache_url":"\/bb\/m\/t\/4.json","json_url":"\/bb\/m\/json\/t?action=edit"}}', $err->error_string);
+		$this->assertEquals('{"success":true,"incoming":{"action":"edit","id":4},"included":[{"x":"ddd","y":"www","z":"1","id":"4","id_md5":"WBDuVepn54OOmgFH5TllK3ccX0Euok_SBby2pJEBjqc"}],"relationships":{"csrf_token":"AAAAAE_CbxN0zA2c7g-Jw_sYoPJLwhnhRNYtBgUc0tHtV9rn","cache_url":"\/bb\/m\/t\/4.json","json_url":"\/bb\/m\/json\/t?action=edit"}}', $err->error_string);
 
 		$_SERVER["REQUEST_URI"] = "/bb/m/json/t?action=topics";
 		foreach (["email","m_id","first_name","last_name","address","company"] as $var) {
@@ -194,7 +201,7 @@ final class ControllerTest extends TestCase
         $err = $controller->Run();
 		$this->assertIsObject($err);
 		$this->assertEquals(200, $err->error_code);
-		$this->assertEquals('{"success":true,"incoming":{"action":"topics"},"included":[{"id":"1","x":"aaa","y":"zzz","z":"1","a":"11","tf_topics":[{"id":"1","a":"11","fid":"1"},{"id":"1","a":"111","fid":"2"}],"id_md5":"t4vU917Jv685DstoX9j3PSf2sQSDho7nWCUc1fmSceM"},{"id":"1","x":"aaa","y":"zzz","z":"1","a":"111","tf_topics":[{"id":"1","a":"11","fid":"1"},{"id":"1","a":"111","fid":"2"}],"id_md5":"t4vU917Jv685DstoX9j3PSf2sQSDho7nWCUc1fmSceM"},{"id":"2","x":"bbb","y":"yyy","z":"1","a":"22","tf_topics":[{"id":"2","a":"22","fid":"3"},{"id":"2","a":"222","fid":"4"}],"id_md5":"x-qZJlm2PLHOarbqXIcD74WVWnoocJ12FVvscqrFo1I"},{"id":"2","x":"bbb","y":"yyy","z":"1","a":"222","tf_topics":[{"id":"2","a":"22","fid":"3"},{"id":"2","a":"222","fid":"4"}],"id_md5":"x-qZJlm2PLHOarbqXIcD74WVWnoocJ12FVvscqrFo1I"},{"id":"3","x":"ccc","y":"xxx","z":"1","a":"33","tf_topics":[{"id":"3","a":"33","fid":"5"},{"id":"3","a":"333","fid":"6"}],"id_md5":"QyS6M0JsP1IliMRwRQK1qph3joyc7xpKjAnuxSsz8KU"},{"id":"3","x":"ccc","y":"xxx","z":"1","a":"333","tf_topics":[{"id":"3","a":"33","fid":"5"},{"id":"3","a":"333","fid":"6"}],"id_md5":"QyS6M0JsP1IliMRwRQK1qph3joyc7xpKjAnuxSsz8KU"},{"id":"4","x":"ddd","y":"www","z":"1","a":"444","tf_topics":[{"id":"4","a":"444","fid":"7"}],"id_md5":"np0baH86baQeyk1Zxz3Z0oXJFSezATsvXPC3flXxwuw"},{"id":"5","x":"eee","y":"vvv","z":"1","a":"555","tf_topics":[{"id":"5","a":"555","fid":"8"}],"id_md5":"gSgO8oRir9grvwa_Lx4A4seiGUTydiD4ubFgu1MbMw8"}],"relationships":{"csrf_token":"AAAAAChiLVJ38tK1jhVzmuNNTV6gjS6Zc3zJD6qV05NWydwF","cache_url":"\/bb\/m\/t\/topics.json","json_url":"\/bb\/m\/json\/t?action=topics"}}', $err->error_string);
+		$this->assertEquals('{"success":true,"incoming":{"action":"topics"},"included":[{"id":"1","x":"aaa","y":"zzz","z":"1","a":"11","tf_topics":[{"id":"1","a":"11","fid":"1"},{"id":"1","a":"111","fid":"2"}],"id_md5":"NqbjaOTdKgeU-u1En0zf9uIOOsOGBWOr9I5fasQ-YxM"},{"id":"1","x":"aaa","y":"zzz","z":"1","a":"111","tf_topics":[{"id":"1","a":"11","fid":"1"},{"id":"1","a":"111","fid":"2"}],"id_md5":"NqbjaOTdKgeU-u1En0zf9uIOOsOGBWOr9I5fasQ-YxM"},{"id":"2","x":"bbb","y":"yyy","z":"1","a":"22","tf_topics":[{"id":"2","a":"22","fid":"3"},{"id":"2","a":"222","fid":"4"}],"id_md5":"L9-9OwSaFmPnoCPNKpYF1M2gOAYpTN3PKsESn9EfdWs"},{"id":"2","x":"bbb","y":"yyy","z":"1","a":"222","tf_topics":[{"id":"2","a":"22","fid":"3"},{"id":"2","a":"222","fid":"4"}],"id_md5":"L9-9OwSaFmPnoCPNKpYF1M2gOAYpTN3PKsESn9EfdWs"},{"id":"3","x":"ccc","y":"xxx","z":"1","a":"33","tf_topics":[{"id":"3","a":"33","fid":"5"},{"id":"3","a":"333","fid":"6"}],"id_md5":"XGz0HstPHvpOD2tmf9jz3CsvnTUiOB-KW9IVX5KJ630"},{"id":"3","x":"ccc","y":"xxx","z":"1","a":"333","tf_topics":[{"id":"3","a":"33","fid":"5"},{"id":"3","a":"333","fid":"6"}],"id_md5":"XGz0HstPHvpOD2tmf9jz3CsvnTUiOB-KW9IVX5KJ630"},{"id":"4","x":"ddd","y":"www","z":"1","a":"444","tf_topics":[{"id":"4","a":"444","fid":"7"}],"id_md5":"WBDuVepn54OOmgFH5TllK3ccX0Euok_SBby2pJEBjqc"},{"id":"5","x":"eee","y":"vvv","z":"1","a":"555","tf_topics":[{"id":"5","a":"555","fid":"8"}],"id_md5":"Gv6nPAvRmIrGVwZiqF0K84XjlP-v4g8S5Y42B9rpF5c"}],"relationships":{"csrf_token":"AAAAAE_CbxN0zA2c7g-Jw_sYoPJLwhnhRNYtBgUc0tHtV9rn","cache_url":"\/bb\/m\/t\/topics.json","json_url":"\/bb\/m\/json\/t?action=topics"}}', $err->error_string);
 
 		$_SERVER["REQUEST_URI"] = "/bb/m/e/t?action=topics";
 		foreach (["email","m_id","first_name","last_name","address","company"] as $var) {

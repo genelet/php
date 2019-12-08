@@ -36,7 +36,7 @@ class Controller extends Config
             return new Gerror(404);
         }
 
-        if ($role_name != $c->{"Pubrole"}) {
+        if ($role_name != $this->pubrole) {
             if (empty($this->roles[$role_name])) {
                 return new Gerror(404);
             }
@@ -47,10 +47,10 @@ class Controller extends Config
             } elseif ($this->Is_login($comp_name) || $this->Is_oauth2($comp_name)) {
                 $dbi = new Dbi($this->pdo);
                 $ticket = $this->Is_oauth2($comp_name)
-                ? new Oauth2($dbi, null, $c, $role_name, $tag_name, $comp_name)
+                ? new Oauth2($dbi, null, $this->original, $role_name, $tag_name, $comp_name)
                 : isset($_REQUEST[$this->provider_name])
-                ? new Procedure($dbi, null, $c, $role_name, $tag_name, $_REQUEST[$this->provider_name])
-                : new Procedure($dbi, null, $c, $role_name, $tag_name);
+                ? new Procedure($dbi, null, $this->original, $role_name, $tag_name, $_REQUEST[$this->provider_name])
+                : new Procedure($dbi, null, $this->original, $role_name, $tag_name);
 			    if ($ticket->Is_public()) { return new Gerror(404); }
                 $err = $ticket->Handler();
 			    if ($err === null) { return new Gerror(401); }
@@ -260,8 +260,8 @@ class Controller extends Config
         if ($this->Is_json_tag($tag_name)) {
                 if ($_SERVER["REQUEST_METHOD"] === "POST") {$this->body_json();}
         }
-        $action = isset($_REQUEST[$c->{"Action_name"}])
-        ? $_REQUEST[$c->{"Action_name"}]
+        $action = isset($_REQUEST[$this->action_name])
+        ? $_REQUEST[$this->action_name]
         : $this->default_actions[$_SERVER["REQUEST_METHOD"]];
 		return array($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, null);
 	}

@@ -131,9 +131,9 @@ class Access extends Base
         return array($ip, $login, $group, $when, $hash, null);
     }
 
-    public function Verify_cookies(string $raw = null): ?Gerror
+    public function Verify_cookies(string ...$raw): ?Gerror
     {
-        $a = $this->get_cookie($raw);
+        $a = $this->get_cookie(...$raw);
         if ($a[5] != null) { // error found
             return $a[5];
         }
