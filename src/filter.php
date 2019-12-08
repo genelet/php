@@ -2,7 +2,6 @@
 declare (strict_types = 1);
 
 namespace Genelet;
-use PDO;
 
 include 'gate.php';
 include 'procedure.php';
@@ -91,7 +90,7 @@ class Filter extends Gate
 				return new Gerror(3207, "Upload internal: ".$image["error"]);
 			}
 			$item = $this->actionHash["upload"][$field];
-			$uploadfile = $this->config["Uploaddir"]."/".$this->Role_name."/";
+			$uploadfile = $this->uploaddir."/".$this->Role_name."/";
 			$uploadfile .= (!$this->Is_public() && $item===$this->Get_idname()) ? $_REQUEST[$item] : $item;
 			if (!file_exists($uploadfile)) {
 				mkdir($uploadfile, 0777, true);
@@ -113,10 +112,10 @@ class Filter extends Gate
 			if ($err != null) { return $err;}
 		}
 		if (isset($this->actionHash["options"]) && array_search("csrf", $this->actionHash["options"]) !== false) {
-			if (empty($_POST[$this->config["Csrf_name"]])) {
+			if (empty($_POST[$this->csrf_name])) {
 				return new Gerror(3209);
 			}
-			$token = $_POST[$this->config["Csrf_name"]];
+			$token = $_POST[$this->csrf_name];
 			$stamp = Access::Get_tokentime($token);
 			if ($token !== $this->TokenWithinLogin($stamp)) {
 				return new Gerror(3210);
@@ -168,12 +167,11 @@ class Filter extends Gate
 		if (!$this->Is_public()) {
 			$idname = $this->Get_idname();
 			$value_idname = $this->ARGS[$idname];
-			$model->OTHER[$this->config->{"Csrf_name"}] = $this->TokenWithinLogin(intval($_SERVER["REQUEST_TIME"]));
+			$model->OTHER[$this->csrf_name] = $this->TokenWithinLogin(intval($_SERVER["REQUEST_TIME"]));
 		}
 		if ($_SERVER["REQUEST_METHOD"]==="GET" || $_SERVER["REQUEST_METHOD"]==="GET_item") {
-			$c = $this->config;
 			$name = "";
-			if ($this->Action === $c->{"Default_actions"}->{"GET_item"}) {
+			if ($this->Action == $this->default_actions["GET_item"]) {
 				$name = $_REQUEST[$this->current_key];
 			} else {
 				$name = $this->Action;
@@ -182,30 +180,29 @@ class Filter extends Gate
 				}
 			}
 			$this->Role_name . 
-			$model->OTHER[$c->{"CacheURL_name"}] = $c->{"Script"} . "/" . $this->Role_name . "/" . $this->Component . "/" . $name . "." . $this->Tag_name;
+			$model->OTHER[$this->cache_url_name] = $this->script . "/" . $this->Role_name . "/" . $this->Component . "/" . $name . "." . $this->Tag_name;
         	$parts = explode("/", $_SERVER["REQUEST_URI"]);
         	$parts[3] = "json";
-        	$model->OTHER[$c->{"JsonURL_name"}] = implode("/", $parts);
+        	$model->OTHER[$this->json_url_name] = implode("/", $parts);
 		}
 		return null;
 	}
 
     public function Login_as() : ?Gerror {
         $ARGS = $this->ARGS;
-        $c    = $this->config;
-        if (empty($ARGS[$c->{"Roleas_name"}]) || empty($ARGS[$c->{"Roleas_md5"}]) || empty($ARGS[$c->{"Provider_name"}]) || empty($ARGS[$c->{"Roleas_uri"}])) {
-            return new Gerror(3332, "missing one of values: " . implode(", ", array($c->{"Roleas_name"}, $c->{"Roleas_md5"}, $c->{"Roleas_uri"}, $c->{"Provider_name"})));
+        if (empty($ARGS[$this->roleas_name]) || empty($ARGS[$this->roleas_md5]) || empty($ARGS[$this->provider_name]) || empty($ARGS[$this->roleas_uri])) {
+            return new Gerror(3332, "missing one of values: " . implode(", ", array($this->roleas_name, $this->roleas_md5, $this->roleas_uri, $this->provider_name)));
         }
-		$ticket = new Procedure(new Dbi(new PDO(...$c->{"Db"})), $ARGS[$c->{"Roleas_uri"}], $c, $ARGS[$c->{"Roleas_name"}], $this->Tag_name, $ARGS[$c->{"Provider_name"}]);
+		$ticket = new Procedure(new Dbi(new \PDO(...$this->db)), $ARGS[$this->roleas_uri], $this->original, $ARGS[$this->roleas_name], $this->Tag_name, $ARGS[$this->provider_name]);
         if ($ticket->Is_admin()) {
             return new Gerror(403);
         }
-        $tmp_login = $ticket->Get_issuer()->{"Credential"}[0];
+        $tmp_login = $ticket->Get_issuer()->credential[0];
         if (empty($ARGS[$tmp_login])) {
             return new Gerror(3333, "missing: ".$tmp_login);
         }
 		$tmp_value = $ARGS[$tmp_login];
-        if ($ARGS[$c->{"Roleas_md5"}] !== $this->DigestWithinLogin($ticket->Role_name.$tmp_login.$tmp_value)) {
+        if ($ARGS[$c->roleas_md5] !== $this->DigestWithinLogin($ticket->Role_name.$tmp_login.$tmp_value)) {
             return new Gerror(3334);
         }
         $err = $ticket->Authenticate_as($tmp_value);

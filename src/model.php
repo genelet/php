@@ -2,7 +2,6 @@
 declare (strict_types = 1);
 
 namespace Genelet;
-use PDO;
 
 include 'crud.php';
 
@@ -38,7 +37,7 @@ class Model extends Crud
     public $Total_force;
 
 // I may move pdo to Set_default so nextpage shares the same pdo as caller?
-    public function __construct(PDO $pdo, object $comp)
+    public function __construct(\PDO $pdo, object $comp)
     {
         self::Initialize($comp);
 		if (isset($this->Current_tables)) {

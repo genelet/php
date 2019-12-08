@@ -15,58 +15,40 @@ class Gate extends Access
         }
 
 		if ($this->Is_json()) {
-            return new Gerror(200, $this->tag_obj->{"Challenge"});
+            return new Gerror(200, $this->tag_obj->challenge);
         }
 
-        $config = $this->config;
         $escaped = urlencode($_SERVER["REQUEST_URI"]);
-        $this->Set_cookie_session($config->{"Go_probe_name"}, $escaped);
-        $this->Set_cookie_expire($this->role_obj->{"Surface"});
+        $this->Set_cookie_session($this->go_probe_name, $escaped);
+        $this->Set_cookie_expire($this->role_obj->surface);
         $oauth = "";
         $default = "";
         $first = "";
-        $redirect = "";
-        foreach ($this->role_obj->{"Issuers"} as $k => $issuer) {
+        foreach ($this->role_obj->issuers as $k => $issuer) {
 			if ($this->Is_oauth1($k) || $this->Is_oauth2($k)) {
                 if (empty($oauth)) {$oauth = $k;}
             } else {
                 if (empty($first)) {$first = $k;}
-                if (isset($issuer->{"Default"}) && $issuer->{"Default"}) {
+                if ($issuer->default) {
                     $default = $k;
                 }
             }
         }
-        if (isset($default)) {$first = $default;}
-        $redirect = $config->{"Script"} . "/" . $this->Role_name . "/" . $this->Tag_name . "/";
-        if (empty($first)) {
-            $redirect .= $oauth;
-        } else {
-            $redirect .= $config->{"Login_name"};
-        }
-        $redirect .= "?" .
-        $config->{"Go_uri_name"} . "=" . $escaped . "&" .
-        $config->{"Go_err_name"} . "=1025";
-        if (isset($first)) {
-            $redirect .= "&" .
-            $config->{"Role_name"} . "=" . $this->Role_name . "&" .
-            $config->{"Tag_name"} . "=" . $this->Tag_name . "&" .
-            $config->{"Provider_name"} . "=" . $first;
-        }
+        if (!empty($default)) {$first = $default;}
+        $redirect = $this->script . "/" . $this->Role_name . "/" . $this->Tag_name . "/";
+		$redirect .= empty($first) ? $oauth : $this->login_name;
+        $redirect .= "?" .  $this->go_uri_name . "=" . $escaped . "&" . $this->go_err_name . "=1025";
         return new Gerror(303, $redirect);
     }
 
     public function Handler_logout(): ?Gerror
     {
         $role = $this->role_obj;
-        $this->Set_cookie_expire($role->{"Surface"});
-        $this->Set_cookie_expire($role->{"Surface"} . "_");
-        $this->Set_cookie_expire($this->config->{"Go_probe_name"});
+        $this->Set_cookie_expire($role->surface);
+        $this->Set_cookie_expire($role->surface . "_");
+        $this->Set_cookie_expire($this->go_probe_name);
 
-        $chartag = $this->tag_obj;
-        if (isset($chartag->{"Case"}) && $chartag->{"Case"} > 0) {
-            return new Gerror(200, $chartag->{"Logout"});
-        }
-        return new Gerror(303, $role->{"Logout"});
+        return new Gerror(303, $role->logout);
     }
 
     public function Get_attribute(string $key, string &$value): ?Gerror
@@ -86,7 +68,7 @@ class Gate extends Access
         }
         $groups = explode("|", $a[2]);
 
-        foreach ($this->role_obj->{"Attributes"} as $i => $attr) {
+        foreach ($this->role_obj->attributes as $i => $attr) {
             if ($i == 0) {
                 $ref[$attr] = $a[1];
             } elseif (sizeof($groups) >= $i) {
@@ -116,7 +98,7 @@ class Gate extends Access
         $hash = $a[4];
 
         $groups = explode("|", $a[2]);
-        $attrs = $role->{"Attributes"};
+        $attrs = $role->attributes;
         $n = sizeof($attrs);
         $new_groups = array();
         for ($i = 1; $i < $n; $i++) {
@@ -131,8 +113,8 @@ class Gate extends Access
         }
 
         $signed = $this->signed($ip, $login, $new_groups, $when);
-        $this->Set_cookie($role->{"Surface"}, $signed);
-        $this->Set_cookie_session($role->{"Surface"} . "_", $signed);
+        $this->Set_cookie($role->surface, $signed);
+        $this->Set_cookie_session($role->surface . "_", $signed);
 
         return null;
     }

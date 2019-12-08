@@ -2,7 +2,6 @@
 declare (strict_types = 1);
 
 namespace Genelet;
-use PDO;
 
 include_once "controller.php";
 
@@ -13,7 +12,7 @@ class Beacon extends Controller {
 	public $headers; // this is for client REQUEST header
 	public $redirect;
 	
-	public function __construct(object $c, PDO $pdo, array $components, array $storage, string $role, string $tag=null, string $ip=null, array $headers=null) {
+	public function __construct(object $c, \PDO $pdo, array $components, array $storage, string $role, string $tag=null, string $ip=null, array $headers=null) {
 		parent::__construct($c, $pdo, $components, $storage);
 		$this->Role_name = $role;
 		if (isset($tag)) {$this->Tag_name=$tag;} else {$this->Tag_name="json";}
@@ -32,9 +31,9 @@ class Beacon extends Controller {
 		$_COOKIE = array();
 
 		$_SERVER['HTTP_HOST'] = "localhost";
-		$_SERVER['SCRIPT_NAME'] = $this->config->{"Script"};
+		$_SERVER['SCRIPT_NAME'] = $this->script;
 		$_SERVER['REMOTE_ADDR'] = $this->ip;
-		$_SERVER["REQUEST_URI"] = $this->config->{"Server_url"}.$this->config->{"Script"}."/".$this->Role_name."/".$this->Tag_name."/".$obj;
+		$_SERVER["REQUEST_URI"] = $this->server_url.$this->script."/".$this->Role_name."/".$this->Tag_name."/".$obj;
 		if (isset($query)) {
 			$_SERVER["REQUEST_URI"] .= "?".$query;
 			parse_str($query, $_REQUEST);
@@ -82,6 +81,6 @@ class Beacon extends Controller {
 	}
 
     public function LOGIN(array $data) : ?Gerror {
-        return $this->post_mock($this->config->{"Login_name"}, $data);
+        return $this->post_mock($this->login_name, $data);
     }
 }

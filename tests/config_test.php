@@ -19,31 +19,31 @@ final class ConfigTest extends TestCase
 
     public function testConfig(): void
     {
-        $c = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $g = $c->config;
+        $g = new Config(json_decode(file_get_contents("../conf/test.conf")));
         $this->assertEquals(
             "aa",
-            $g->{"Document_root"}
+            $g->document_root
         );
         $this->assertEquals(
             "/bb",
-            $g->{"Script"}
+            $g->script
         );
         $this->assertEquals(
             "mysql:host=localhost;dbname=test",
-            $g->{"Db"}[0]
+            $g->db[0]
         );
         $this->assertEquals(
             "application/json; charset=\"UTF-8\"",
-            $g->{"Chartags"}->{"json"}->{"Content_type"}
+            $g->chartags["json"]->content_type
         );
         $this->assertEquals(
             360000,
-            $g->{"Roles"}->{"m"}->{"Duration"}
+            $g->roles["m"]->duration
         );
+		$issuers = $g->roles["m"]->issuers;
         $this->assertEquals(
             "email",
-            $g->{"Roles"}->{"m"}->{"Issuers"}->{"db"}->{"Credential"}[0]
+            $issuers["db"]->credential[0]
         );
     }
 }

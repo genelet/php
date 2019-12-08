@@ -19,12 +19,12 @@ class Ticket extends Access
     }
 
 	private function probe_value(string $input=null) : string {
-		if (isset($_REQUEST[$this->config->{"Go_uri_name"}])) {
-			return $_REQUEST[$this->config->{"Go_uri_name"}];
+		if (isset($_REQUEST[$this->go_uri_name])) {
+			return $_REQUEST[$this->go_uri_name];
 		}
 		foreach (explode("&", parse_url($_SERVER["REQUEST_URI"], PHP_URL_QUERY)) as $item) {
-			$len = strlen($this->config->{"Go_uri_name"});
-			if (substr($item, 0, $len+1) === $this->config->{"Go_uri_name"}."=") {
+			$len = strlen($this->go_uri_name);
+			if (substr($item, 0, $len+1) === $this->go_uri_name."=") {
 				return urldecode(substr($item, $len+1));
 			}
 		}
@@ -33,9 +33,8 @@ class Ticket extends Access
 
     public function Handler(): ?Gerror
     {
-        $config = $this->config;
-        $probe_name = $config->{"Go_probe_name"};
-        $err_name = $config->{"Go_err_name"};
+        $probe_name = $this->go_probe_name;
+        $err_name = $this->go_err_name;
         if (empty($_COOKIE[$probe_name])) {
             $this->Set_cookie_session($probe_name, $this->probe_value());
             return new Gerror(1036);
@@ -54,21 +53,7 @@ class Ticket extends Access
     public function Handler_login(): ?Gerror
     {
         $issuer = $this->Get_issuer();
-        $cred = $issuer->{"Credential"};
-
-/*
-$surface = $role->{"Surface"};
-if (($surface === $cred[3]) && isset($_REQUEST[$surface])) {
-$passin = $_REQUEST[$surface];
-$err = $this->Verify_cookies($passin);
-if ($err != null) {
-return $err;
-}
-$this->Set_cookie($surface, $passin);
-$this->Set_cookie_session($surface . "_", $passin);
-return new Gerror(303, $this->Uri);
-}
- */
+        $cred = $issuer->credential;
 
         if (empty($_REQUEST[$cred[0]]) && empty($_REQUEST[$cred[1]])) {
             return new Gerror(1026);
@@ -91,7 +76,7 @@ return new Gerror(303, $this->Uri);
     {
         $role = $this->role_obj;
         $fields = array();
-        foreach ($role->{"Attributes"} as $i => $v) {
+        foreach ($role->attributes as $i => $v) {
             if (empty($this->Out_hash[$v])) {
 				if ($i===0) { return new Gerror(1032); }
                 continue;
@@ -100,43 +85,38 @@ return new Gerror(303, $this->Uri);
         }
 
         $signed = $this->Signature($fields);
-        $this->Set_cookie($role->{"Surface"}, $signed);
-        $this->Set_cookie_session($role->{"Surface"} . "_", $signed);
+        $this->Set_cookie($role->surface, $signed);
+        $this->Set_cookie_session($role->surface . "_", $signed);
 		return new Gerror(303, $this->Uri);
-/*
-        if (isset($this->tag_obj->{"Case"}) && $this->tag_obj->{"Case"} > 0) {
-            return new Gerror(200, $chartag->{"Logged"});
-        }
-        return new Gerror(303, $this->Uri);
-*/
     }
 
     public function Authenticate(string $login=null, string $password=null): ?Gerror
     {
         $issuer = $this->Get_issuer();
-        if (empty($issuer->{"Provider_pars"}) || $login !== $issuer->{"Provider_pars"}->{"Def_login"} || $password !== $issuer->{"Provider_pars"}->{"Def_password"}) {
+		$pars = $issuer->provider_pars;
+        if (empty($pars["Def_login"]) || empty($pars["Def_password"]) || $login != $pars["Def_login"] || $password !== $pars["Def_password"]) {
             return new Gerror(1031);
         }
 
-        $this->role_obj->{"Attributes"} = array("login", "provider");
-        $this->Out_hash = array("login" => $issuer->{"Provider_pars"}->{"Def_login"}, "provider" => $this->Provider);
+        $this->role_obj->attributes = array("login", "provider");
+        $this->Out_hash = array("login" => $pars["Def_login"], "provider" => $this->Provider);
 
         return null;
     }
 
     public function Get_issuer(): object
     {
-        return $this->role_obj->{"Issuers"}->{$this->Provider};
+        return $this->role_obj->issuers[$this->Provider];
     }
 
     public function Get_provider(): string
     {
         $one = "";
-        foreach ($this->role_obj->{"Issuers"} as $key => $val) {
-            if (isset($val->{"Default"})) {
+        foreach ($this->role_obj->issuers as $key => $val) {
+            if ($val->default) {
                 return $key;
             }
-            $one = $key;
+            if (empty($one)) {$one = $key;}
         }
         return $one;
     }

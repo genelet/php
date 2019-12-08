@@ -2,7 +2,6 @@
 declare (strict_types = 1);
 
 namespace Genelet;
-use PDO;
 
 include 'dbi.php';
 
@@ -11,7 +10,7 @@ class Crud extends Dbi
     public $Current_table;
     public $Current_tables;
 
-    public function __construct(PDO $pdo, string $tbl, array $tbls = null)
+    public function __construct(\PDO $pdo, string $tbl, array $tbls = null)
     {
         parent::__Construct($pdo);
         $this->Current_table = $tbl;

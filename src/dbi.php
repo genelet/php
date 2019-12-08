@@ -2,7 +2,6 @@
 declare (strict_types = 1);
 
 namespace Genelet;
-use PDO;
 
 include_once 'error.php';
 
@@ -12,7 +11,7 @@ class Dbi
     public $Last_id;
     public $Affected;
 
-    public function __construct(PDO $pdo)
+    public function __construct(\PDO $pdo)
     {
         $this->Conn = $pdo;
     }
@@ -93,7 +92,7 @@ class Dbi
         if ($result === false) {
 			return new Gerror(1072, $this->errstr());
 		}
-        $lists = $sth->fetchAll(PDO::FETCH_ASSOC);
+        $lists = $sth->fetchAll(\PDO::FETCH_ASSOC);
         if ($lists === false) {return new Gerror(1073, self::errsmt($sth));}
         $sth->closeCursor();
         return null;
@@ -101,13 +100,13 @@ class Dbi
 
     public function Select_sql_label(array &$lists, array $select_labels, string $sql, ...$args): ?Gerror
     {
-        $sth = $this->Conn->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
+        $sth = $this->Conn->prepare($sql, array(\PDO::ATTR_CURSOR => \PDO::CURSOR_SCROLL));
         if ($sth == false) {return new Gerror(1071, $this->errstr());}
         $result = $sth->execute($args);
         if ($result === false) {
 			return new Gerror(1072, $this->errstr());
 		}
-        while ($row = $sth->fetch(PDO::FETCH_NUM, PDO::FETCH_ORI_NEXT)) {
+        while ($row = $sth->fetch(\PDO::FETCH_NUM, \PDO::FETCH_ORI_NEXT)) {
             $item = array();
             foreach ($select_labels as $i => $key) {
                 $item[$key] = $row[$i];

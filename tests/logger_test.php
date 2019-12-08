@@ -3,6 +3,7 @@ declare (strict_types = 1);
 namespace Genelet\Tests;
 
 include_once "../src/logger.php";
+
 use PHPUnit\Framework\TestCase;
 use Genelet\Logger;
 
@@ -14,14 +15,14 @@ final class LoggerTest extends TestCase
         $config = json_decode($content);
         $this->assertInstanceOf(
             Logger::class,
-            new Logger($config->{"Log"}->{"Filename"}, "events", $config->{"Log"}->{"Level"})
+            new Logger($config->{"Log"}->{"Filename"}, $config->{"Log"}->{"Level"})
         );
     }
 
     public function testLogger(): void
     {
         $config = json_decode(file_get_contents("../conf/test.conf"));
-        $logger = new Logger($config->{"Log"}->{"Filename"}, "events", $config->{"Log"}->{"Level"});
+        $logger = new Logger($config->{"Log"}->{"Filename"}, $config->{"Log"}->{"Level"});
 		$this->assertFalse($logger->is_emergency());
 		$this->assertFalse($logger->is_alert());
 		$this->assertTrue($logger->is_critical());

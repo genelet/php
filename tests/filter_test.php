@@ -79,7 +79,7 @@ final class FilterTest extends TestCase
         $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("../conf/test.conf")), "m", "e", "db");
 		$ARGS =& $filter->ARGS;
 
-        $pdo = new \PDO(...$filter->config->{"Db"});
+        $pdo = new \PDO(...$filter->db);
         $model = new Model($pdo, self::init());
         $err = $model->Exec_sql(
             "drop table if exists testing_f");
@@ -129,7 +129,7 @@ final class FilterTest extends TestCase
 		$this->assertEquals(1052, $err->error_code);
 
 		// Endtime=0
-		$_REQUEST["junk_md5"] = "9_D4QSqeXPa0rxxO7SvHRVj9rQvpbWM_KkGu4GdcEy0";
+		$_REQUEST["junk_md5"] = "j0aaXgvlb-w_60PM_xHTLrClN4sP20e2-M713anfTv0";
 		$err = $filter->Before($model, $extra, $nextextras);
 		$this->assertNull($err);
 	}
@@ -140,7 +140,7 @@ final class FilterTest extends TestCase
         $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("../conf/test.conf")), "m", "e", "db");
 		$ARGS =& $filter->ARGS;
 
-        $pdo = new \PDO(...$filter->config->{"Db"});
+        $pdo = new \PDO(...$filter->db);
         $model = new Model($pdo, self::init());
         $err = $model->Exec_sql(
             "drop table if exists testing_f");
@@ -168,7 +168,7 @@ final class FilterTest extends TestCase
 		$list0 = $model->LISTS[0];
 		$this->assertEquals("junk1", $list0["junk0"]);
 		// Endtime=0
-		$this->assertEquals("9_D4QSqeXPa0rxxO7SvHRVj9rQvpbWM_KkGu4GdcEy0", $list0["junk_md5"]);
+		$this->assertEquals("j0aaXgvlb-w_60PM_xHTLrClN4sP20e2-M713anfTv0", $list0["junk_md5"]);
 		$this->assertEquals("aa", $list0["x"]);
 		$this->assertEquals("bb", $list0["y"]);
 	}

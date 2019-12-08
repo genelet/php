@@ -2,6 +2,7 @@
 declare (strict_types = 1);
 namespace Genelet;
 
+require_once __DIR__ . '/../vendor/autoload.php';
 use Psr\Log\LogLevel;
 use Psr\Log\LoggerInterface;
 
@@ -9,7 +10,6 @@ class Logger implements \Psr\Log\LoggerInterface
 {
 	private $current_msg;
 	private $current_level;
-	private $channel;
 	public $filename;
 
 	const LOG_LEVEL_NONE = 'none';
@@ -25,10 +25,9 @@ class Logger implements \Psr\Log\LoggerInterface
         LogLevel::EMERGENCY  => 7,
 	];
 
-	public function __construct(string $log_file, string $channel, string $log_level = LogLevel::WARNING)
+	public function __construct(string $log_file, string $log_level = LogLevel::WARNING)
     {
         $this->filename  = $log_file;
-        $this->channel   = $channel;
         $this->current_level = $log_level;
     }
 
@@ -59,7 +58,7 @@ class Logger implements \Psr\Log\LoggerInterface
 			fwrite($fh, $msg);
 			fclose($fh);
 		} catch (\Throwable $e) {
-			throw new \RuntimeException("Could not open log file {$this->filename} for writing to channel {$this->channel}!", 0, $e);
+			throw new \RuntimeException("Could not open log file {$this->filename}", 0, $e);
 		}
 
 		return;

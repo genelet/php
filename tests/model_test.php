@@ -27,7 +27,7 @@ final class ModelTest extends TestCase
     public function testCreatedModel(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $pdo = new \PDO(...$conf->config->{"Db"});
+        $pdo = new \PDO(...$conf->db);
         $this->assertInstanceOf(
             Model::class,
             new Model($pdo, self::init())
@@ -37,7 +37,7 @@ final class ModelTest extends TestCase
     public function testModelExec(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $pdo = new \PDO(...$conf->config->{"Db"});
+        $pdo = new \PDO(...$conf->db);
         $model = new Model($pdo, self::init());
         $err = $model->Exec_sql(
             "drop table if exists testing_f");
@@ -215,7 +215,7 @@ final class ModelTest extends TestCase
     public function testModelNextpages(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $pdo = new \PDO(...$conf->config->{"Db"});
+        $pdo = new \PDO(...$conf->db);
         $model = new Model($pdo, self::init2());
         $t  = new Model($pdo, self::init2());
 		$tf = new Model($pdo, self::init3());

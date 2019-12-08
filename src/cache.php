@@ -25,12 +25,11 @@ class Cache extends Base implements \Psr\SimpleCache\CacheInterface
 
     private function getDir(): string
     {
-        $c = $this->config;
         $role = $this->Get_role();
 
-        $dir = $c->{"Cache"}->{"Top"} . "/" . $this->Role_name;
+        $dir = $this->cachetop . "/" . $this->Role_name;
         if (!$this->Is_public()) {
-            $dir .= "/" . $_REQUEST[$role->{"Id_name"}];
+            $dir .= "/" . $_REQUEST[$role->idname];
         }
         if (!file_exists($dir)) {
             mkdir($dir, 0777, true);

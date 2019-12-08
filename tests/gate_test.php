@@ -35,7 +35,7 @@ final class GateTest extends TestCase
         $err = $gate->Forbid();
         $this->assertIsObject($err);
         $this->assertEquals(303, $err->error_code);
-        $this->assertEquals("/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Fcomp%3Faction%3Dact&go_err=1025&role=m&tag=e&provider=db", $err->error_string);
+        $this->assertEquals("/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Fcomp%3Faction%3Dact&go_err=1025", $err->error_string);
     }
 
     /**
@@ -52,8 +52,7 @@ final class GateTest extends TestCase
         $gate = new Gate(json_decode(file_get_contents("../conf/test.conf")), "m", "json");
         $err = $gate->Handler_logout();
         $this->assertIsObject($err);
-        $this->assertEquals(200, $err->error_code);
-        $this->assertEquals("logout", $err->error_string);
+        $this->assertEquals(303, $err->error_code);
     }
 
     /**

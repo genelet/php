@@ -17,19 +17,19 @@ class Base extends Config
         parent::__construct($c);
         $this->Role_name = $rv;
         $this->Tag_name = $cv;
-        if ($c->{"Pubrole"} != $rv) {
-		    $this->role_obj = $c->{"Roles"}->{$rv};
+        if ($this->pubrole != $rv) {
+		    $this->role_obj = $this->roles[$rv];
         }
-        $this->tag_obj = $c->{"Chartags"}->{$cv};
+        $this->tag_obj = $this->chartags[$cv];
     }
 
 	public function Is_admin() : bool {
 		if ($this->Is_public()===true) {return false;}
-		return $this->role_obj->{"Is_admin"};
+		return $this->role_obj->is_admin;
 	}
 
 	public function Is_public() : bool {
-		return $this->config->{"Pubrole"}===$this->Role_name;
+		return $this->pubrole == $this->Role_name;
 	}
 
 	public function Is_normal_role() : bool {
@@ -42,7 +42,7 @@ class Base extends Config
 	}
 
     public function Get_idname(): string {
-		return $this->role_obj->{"Id_name"};
+		return $this->role_obj->idname;
 	}
 
     public function Get_ip(): string
@@ -61,11 +61,10 @@ class Base extends Config
 	{
 		if ($this->Is_public()) { return; }
 		$role = $this->role_obj;
-        $domain = isset($role->{"Domain"}) ? $role->{"Domain"} : $_SERVER["HTTP_HOST"];
-        $path = isset($role->{"Path"}) ? $role->{"Path"} : "/";
+        $domain = empty($role->domain) ? $_SERVER["HTTP_HOST"] : $role->domain;
 		$_COOKIE["SET_COOKIE"][$name] = $value; // cli to get headers_list()
-		$exp = ($current>0) ? $current+$role->{"Duration"} : $current;
-        setcookie($name, $value, $exp, $path, $domain);
+		$exp = ($current>0) ? $current+$role->duration : $current;
+        setcookie($name, $value, $exp, $role->path, $domain);
     }
 
     public function Set_cookie(string $name, string $value) : void

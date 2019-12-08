@@ -18,20 +18,15 @@ class Procedure extends Ticket
     public function Run_sql(string $call_name, ...$in_vals): ?Gerror
     {
         $issuer = $this->Get_issuer();
-        if (isset($issuer->{"Screen"}) && ($issuer->{"Screen"} & 1) != 0) {
+        if (($issuer->screen & 1) != 0) {
             $in_vals = array_push($in_vals, ip2long($this->Get_ip()));
         }
-        if (isset($issuer->{"Screen"}) && ($issuer->{"Screen"} & 2) != 0 && !empty($this->Uri)) {
+        if (($issuer->screen & 2) != 0 && !empty($this->Uri)) {
             $in_vals = array_push($in_vals, $this->Uri);
         }
-        // if ($issuer->{"Screen"} & 4) !=0 {$in_vals= array_push($in_vals, $this->Get_ua())}
-        // if ($issuer->{"Screen"} & 8) !=0 {$in_vals= array_push($in_vals, $this->Get_referer())}
-        $out_pars = array();
-        if (isset($issuer->{"Out_pars"})) {
-            $out_pars = $issuer->{"Out_pars"};
-        } elseif (isset($this->role_obj->{"Attributes"})) {
-            $out_pars = $this->role_obj->{"Attributes"};
-        }
+        // if ($issuer->screen & 4) !=0 {$in_vals= array_push($in_vals, $this->Get_ua())}
+        // if ($issuer->screen & 8) !=0 {$in_vals= array_push($in_vals, $this->Get_referer())}
+        $out_pars = empty($issuer->out_pars) ? $this->role_obj->attributes : $issuer->out_pars;
         $this->Out_hash = array();
         return (strtolower(substr($call_name, 0, 7)) === "select ") ?
         $this->dbi->Get_sql_label($this->Out_hash, $out_pars, $call_name, ...$in_vals) :
@@ -41,13 +36,13 @@ class Procedure extends Ticket
     public function Authenticate(string $login=null, string $passwd=null): ?Gerror
     {
         $issuer = $this->Get_issuer();
-        return $this->Run_sql($issuer->{"Sql"}, $login, $passwd);
+        return $this->Run_sql($issuer->sql, $login, $passwd);
     }
 
     public function Authenticate_as(string $login): ?Gerror
     {
         $issuer = $this->Get_issuer();
-        return $this->Run_sql($issuer->{"Sql_as"}, $login);
+        return $this->Run_sql($issuer->sql_as, $login);
     }
 
     public function Callback_address(): string
@@ -56,23 +51,23 @@ class Procedure extends Ticket
         if (isset($_SERVER["HTTPS"])) {
             $http .= "s";
         }
-        return $http . "://" . $_SERVER["HTTP_HOST"] . $this->config->{"Script"} . "/" . $this->Role_name . "/" . $this->Tag_name . "/" . $this->Provider . "?" . $this->config->{"Go_uri_name"} . "=" . urlencode($this->Uri);
+        return $http . "://" . $_SERVER["HTTP_HOST"] . $this->script . "/" . $this->Role_name . "/" . $this->Tag_name . "/" . $this->Provider . "?" . $this->go_uri_name . "=" . urlencode($this->Uri);
     }
 
     public function Fill_provider(array $back): ?Gerror
     {
         $issuer = $this->Get_issuer();
         $in_vals = array();
-        foreach ($issuer->{"In_pars"} as $par) {
+        foreach ($issuer->in_pars as $par) {
             if (!empty($back[$par])) {
                 $in_vals = array_push($in_vals, $back[$par]);
             }
         }
 
-        $err = $this->Run_sql($issuer->{"Sql"}, $in_vals);
+        $err = $this->Run_sql($issuer->sql, $in_vals);
         if ($err != null) {return $err;}
 
-        foreach ($this->role_obj->{"Attributes"} as $key) {
+        foreach ($this->role_obj->sttributes as $key) {
             if (empty($this->Out_hash[$key])) {
                 $this->Out_hash[$key] = $back[$key];
             }

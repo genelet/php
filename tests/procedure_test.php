@@ -13,7 +13,7 @@ final class ProcedureTest extends TestCase
     public function testCreatedProcedure(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $dbi = new Dbi(new \PDO(...$conf->config->{"Db"}));
+        $dbi = new Dbi(new \PDO(...$conf->db));
 
         $this->assertInstanceOf(
             Procedure::class,
@@ -27,7 +27,7 @@ final class ProcedureTest extends TestCase
     public function testProcedureCallback(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $dbi = new Dbi(new \PDO(...$conf->config->{"Db"}));
+        $dbi = new Dbi(new \PDO(...$conf->db));
         $proc = new Procedure($dbi, "/bb/m/e/comp?action=act", json_decode(file_get_contents("../conf/test.conf")), "m", "json", "facebook");
         $_SERVER["HTTPS"] = "Yes";
         $_SERVER["HTTP_HOST"] = "aaa.bbb.com";
@@ -40,7 +40,7 @@ final class ProcedureTest extends TestCase
     public function testProcedureAuthenticate(): void
     {
         $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
-        $dbi = new Dbi(new \PDO(...$conf->config->{"Db"}));
+        $dbi = new Dbi(new \PDO(...$conf->db));
         $err = $dbi->Exec_sql(
             "drop table if exists testing_f");
         $this->assertNull($err);

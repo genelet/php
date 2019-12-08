@@ -2,7 +2,6 @@
 declare (strict_types = 1);
 
 namespace Genelet;
-use PDO;
 use Twig;
 
 include_once 'config.php';
@@ -14,7 +13,7 @@ class Controller extends Config
     public $pdo;
     public $components;
     public $Storage;
-    public function __construct(object $c, PDO $pdo, array $components, array $storage)
+    public function __construct(object $c, \PDO $pdo, array $components, array $storage)
     {
         parent::__construct($c);
         $this->pdo = $pdo;
@@ -27,19 +26,18 @@ class Controller extends Config
         // self::cross_domain();
         if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {return new Gerror(200);}
 
-        $c = $this->config;
-        if (empty($c->{"Default_actions"}->{$_SERVER["REQUEST_METHOD"]})) {
+        if (empty($this->default_actions[$_SERVER["REQUEST_METHOD"]])) {
             return new Gerror(405);
         }
 
         list ($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, $err) = $this->getUrl();
         if (isset($err)) { return $err; }
-        if (empty($c->{"Chartags"}) || empty($c->{"Chartags"}->{$tag_name})) {
+        if (empty($this->chartags[$tag_name])) {
             return new Gerror(404);
         }
 
         if ($role_name != $c->{"Pubrole"}) {
-            if (empty($c->{"Roles"}) || empty($c->{"Roles"}->{$role_name})) {
+            if (empty($this->roles[$role_name])) {
                 return new Gerror(404);
             }
 
@@ -50,8 +48,8 @@ class Controller extends Config
                 $dbi = new Dbi($this->pdo);
                 $ticket = $this->Is_oauth2($comp_name)
                 ? new Oauth2($dbi, null, $c, $role_name, $tag_name, $comp_name)
-                : isset($_REQUEST[$c->{"Provider_name"}])
-                ? new Procedure($dbi, null, $c, $role_name, $tag_name, $_REQUEST[$c->{"Provider_name"}])
+                : isset($_REQUEST[$this->provider_name])
+                ? new Procedure($dbi, null, $c, $role_name, $tag_name, $_REQUEST[$this->provider_name])
                 : new Procedure($dbi, null, $c, $role_name, $tag_name);
 			    if ($ticket->Is_public()) { return new Gerror(404); }
                 $err = $ticket->Handler();
@@ -73,13 +71,14 @@ class Controller extends Config
 		}
         $OLD = $_REQUEST;
 
-        $filter_name = ($c->{"Project"} === "Genelet")
+        $filter_name = ($this->project == "Genelet")
         ? '\\Genelet\\Filter'
-        : '\\' . $c->{"Project"} . '\\' . ucfirst($comp_name) . '\\Filter';
-        $filter = new $filter_name($this->components[$comp_name], $action, $comp_name, $c, $role_name, $tag_name);
+        : '\\' . $this->project . '\\' . ucfirst($comp_name) . '\\Filter';
+        $filter = new $filter_name($this->components[$comp_name], $action, $comp_name, $this->original, $role_name, $tag_name);
 
         if (!$filter->Is_public()) {
-            $err = $filter->Forbid();
+			$surface = $filter->roles[$role_name]->surface;
+            $err = empty($_REQUEST[$surface]) ? $filter->Forbid() : $filter->Forbid($_REQUEST[$surface]);
             if ($err != null) {return $err;} // for authentication is 303
         }
         if (!$filter->Role_can()) {
@@ -90,9 +89,8 @@ class Controller extends Config
             return $filter->Login_as();
         }
 
-		$ttl = $c->{"Ttl"};
-		if (isset($filter->actionHash["ttl"])) { $ttl = $filter->actionHash["ttl"]; }
-		$cache = new Cache($c, $role_name, $tag_name, $action, $comp_name, $cache_type, $ttl);
+		$ttl = isset($filter->actionHash["ttl"]) ? $filter->actionHash["ttl"] : $this->ttl;
+		$cache = new Cache($this->original, $role_name, $tag_name, $action, $comp_name, $cache_type, $ttl);
 		if ($cache_type>0) {
 			if ($cache->has($url_key)) {
 				return new Gerror(200, $cache->get($url_key));
@@ -141,7 +139,7 @@ class Controller extends Config
 			header("Content-Type: application/json");
             return json_encode(["success" => false, "error_code" => $err->error_code, "error_string" => $err->error_string]);
         }
-        $loader = new \Twig\Loader\FilesystemLoader($this->config->{"Template"});
+        $loader = new \Twig\Loader\FilesystemLoader($this->template);
         $twig = new \Twig\Environment($loader);
         return $twig->render("error." . $tag_name, ["error_code" => $err->error_code, "error_string" => $err->error_string]);
     }
@@ -154,9 +152,9 @@ class Controller extends Config
 			header("Content-Type: application/json");
             return json_encode(["success" => false, "error_code" => $err->error_code, "error_string" => $err->error_string]);
         }
-        $loader = new \Twig\Loader\FilesystemLoader($this->config->{"Template"} . "/" . $role_name);
+        $loader = new \Twig\Loader\FilesystemLoader($this->template . "/" . $role_name);
         $twig = new \Twig\Environment($loader);
-        return $twig->render($this->config->{"Login_name"} . "." . $tag_name, ["error_code" => $err->error_code, "error_string" => $err->error_string]);
+        return $twig->render($this->login_name . "." . $tag_name, ["error_code" => $err->error_code, "error_string" => $err->error_string]);
     }
 
     private function content_page(string $role, string $comp, string $action, string $tag, array $old, array $lists, array $other): string
@@ -165,7 +163,7 @@ class Controller extends Config
 			header("Content-Type: application/json");
 			return json_encode(["success" => true, "incoming" => $old, "included" => $lists, "relationships" => $other]);
 		}
-        $loader = new \Twig\Loader\FilesystemLoader($this->config->{"Template"} . "/" . $role . "/" . $comp);
+        $loader = new \Twig\Loader\FilesystemLoader($this->template . "/" . $role . "/" . $comp);
         $twig = new \Twig\Environment($loader);
         return $twig->render($action . "." . $tag, array_merge(array_merge($old, $other), [$action => $lists]));
     }
@@ -216,11 +214,10 @@ class Controller extends Config
 
 	// cache_type(1 for id, 2 others), role, tag, component, action, id, error
 	private function getUrl() : array {
-		$c = $this->config;
-		$length = strlen($c->{"Script"});
+		$length = strlen($this->script);
         $url_obj = parse_url($_SERVER["REQUEST_URI"]);
         $l_url = strlen($url_obj["path"]);
-        if ($l_url <= $length || substr($url_obj["path"], 0, $length + 1) !== $c->{"Script"} . "/") {
+        if ($l_url <= $length || substr($url_obj["path"], 0, $length + 1) !== $this->script . "/") {
 			return array(0, "", "", "", "", "", new Gerror(400));
         }
 
@@ -244,7 +241,7 @@ class Controller extends Config
             $action = $arr[0];
             if (preg_match("/^[0-9]+$/", $arr[0])) {
 				$cache_type = 1;
-                $action = $c->{"Default_actions"}->{"GET_item"};
+                $action = $this->default_actions["GET_item"];
                 $url_key = $arr[0];
             } else {
 				$cache_type = 2;
@@ -265,7 +262,7 @@ class Controller extends Config
         }
         $action = isset($_REQUEST[$c->{"Action_name"}])
         ? $_REQUEST[$c->{"Action_name"}]
-        : $c->{"Default_actions"}->{$_SERVER["REQUEST_METHOD"]};
+        : $this->default_actions[$_SERVER["REQUEST_METHOD"]];
 		return array($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, null);
 	}
 }
