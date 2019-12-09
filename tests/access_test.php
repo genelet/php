@@ -46,19 +46,20 @@ final class AccessTest extends TestCase
         $_SERVER["REMOTE_ADDR"] = "192.168.29.30";
         $fields = array("aaaaa", "bbbbb", "ccccc", "ddddd", "eeeee");
         $s = $access->Signature($fields);
-        $a = $access->get_cookie($s);
-        $this->assertNull($a[5]);
-        $this->assertEquals("192.168.29.30", $a[0]);
-        $this->assertEquals("aaaaa", $a[1]);
-        $this->assertEquals("bbbbb|ccccc|ddddd|eeeee", $a[2]);
-        $this->assertEquals(360000, $a[3]);
-        $this->assertEquals("kGib0q06IqzY1qSmHALJiIt-m-kRfzmsYSmfEnA3ipE", $a[4]);
+        $a = $access->Verify_cookie($s);
+        $this->assertNull($a);
+		$ref = $access->Raw;
+        $this->assertEquals("192.168.29.30", $ref[0]);
+        $this->assertEquals("aaaaa", $ref[1]);
+        $this->assertEquals("bbbbb|ccccc|ddddd|eeeee", $ref[2]);
+        $this->assertEquals(360000, $ref[3]);
+        $this->assertEquals("kGib0q06IqzY1qSmHALJiIt-m-kRfzmsYSmfEnA3ipE", $ref[4]);
         $_SERVER["REQUEST_TIME"] = "360000";
-        $a = $access->get_cookie($s);
-        $this->assertNull($a[5]);
+        $a = $access->Verify_cookie($s);
+        $this->assertNull($a);
         $_SERVER["REQUEST_TIME"] = "360001";
-        $a = $access->get_cookie($s);
-        $this->assertIsObject($a[5]);
-        $this->assertEquals(1022, $a[5]->error_code);
+        $a = $access->Verify_cookie($s);
+        $this->assertIsObject($a);
+        $this->assertEquals(1024, $a->error_code);
     }
 }

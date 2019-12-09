@@ -11,6 +11,7 @@ class Access extends Base
 {
 	public $Decoded;
 	public $Endtime=0;
+	public $Raw;
 
 // https://www.php.net/manual/en/function.openssl-encrypt.php
     public function Encode(string $str) : string {
@@ -78,13 +79,13 @@ class Access extends Base
 		return $this->Encode(join("/", array($ip, $login, $str_group, $when, $hash)));
     }
 
-    public function get_cookie(string ...$raws): array
+    public function Verify_cookie(string ...$raws): ?Gerror
     {
         $role = $this->role_obj;
         $raw = "";
         if (empty($raws)) {
             if (empty($_COOKIE[$role->surface])) {
-                return array("", "", "", "", "", new Gerror(1029));
+                return new Gerror(1020);
             }
             $raw = $_COOKIE[$role->surface];
         } else {
@@ -92,11 +93,11 @@ class Access extends Base
         }
 
         $value = $this->Decode($raw);
-		if ($value===null) {return array("", "", "", "", "", new Gerror(1020));}
+		if ($value===null) {return new Gerror(1021);}
         //$value = Scoder::Decode_scoder($raw, $role->coding);
         $x = explode("/", $value);
         if (sizeof($x) < 5) {
-            return array("", "", "", "", "", new Gerror(1020));
+            return new Gerror(1022);
         }
         $ip = $x[0];
         $login = $x[1];
@@ -113,33 +114,21 @@ class Access extends Base
         $when = intval($x[3]);
 		$this->Endtime = $when;
         $hash = $x[4];
-        if ($this->Set_ip() != $ip) {
-            return array("", "", "", "", "", new Gerror(1023));
+		$this->Raw = array($ip, $login, $group, $when, $hash);
+        if ($role->length>0 && $this->Set_ip() != $ip) {
+            return new Gerror(1023);
         }
         if ($_SERVER["REQUEST_TIME"] > $when) {
-            return array("", "", "", "", "", new Gerror(1022));
+            return new Gerror(1024);
         }
 		
         if (!empty($role->userlist) && array_search($login, $role->userlist) === false) {
-            return array("", "", "", "", "", new Gerror(1021));
+            return new Gerror(1025);
         }
 
         if ($this->Digest($ip. $login. $group) != $hash) {
-            return array("", "", "", "", "", new Gerror(1024));
+            return new Gerror(1026);
         }
-
-        return array($ip, $login, $group, $when, $hash, null);
-    }
-
-    public function Verify_cookies(string ...$raw): ?Gerror
-    {
-        $a = $this->get_cookie(...$raw);
-        if ($a[5] != null) { // error found
-            return $a[5];
-        }
-		foreach ($this->Decoded as $k => $v) {
-			$_REQUEST[$k] = $v;
-		}
 
         return null;
     }

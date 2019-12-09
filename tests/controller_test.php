@@ -136,7 +136,7 @@ final class ControllerTest extends TestCase
 		$err = $controller->Run();
 		$this->assertIsObject($err);
 		$this->assertEquals(303, $err->error_code);
-		$this->assertEquals("/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Ft%3Faction%3Dtopics&go_err=1025", $err->error_string);
+		$this->assertEquals("/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Ft%3Faction%3Dtopics&go_err=1025&provider=db", $err->error_string);
 
 		$_SERVER["REQUEST_URI"] = $err->error_string;
 		$err = $controller->Run();

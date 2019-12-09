@@ -26,16 +26,17 @@ final class GateTest extends TestCase
         $fields = array("aaaaa", "bbbbb", "ccccc", "ddddd", "eeeee");
         $s = $gate->Signature($fields);
         $_COOKIE["mc"] = $s;
-        $err = $gate->Forbid();
+        $err = $gate->Verify_cookie();
         $this->assertNull($err);
 
         $_SERVER["REQUEST_URI"] = "/bb/m/e/comp?action=act";
         $_SERVER["HTTP_HOST"] = "aaa.bbb.ccc";
         $_COOKIE["mc"] .= "21";
-        $err = $gate->Forbid();
+        $err = $gate->Verify_cookie();
         $this->assertIsObject($err);
+		$err = $gate->Forbid();
         $this->assertEquals(303, $err->error_code);
-        $this->assertEquals("/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Fcomp%3Faction%3Dact&go_err=1025", $err->error_string);
+        $this->assertEquals("/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Fcomp%3Faction%3Dact&go_err=1025&provider=db", $err->error_string);
     }
 
     /**
@@ -66,9 +67,9 @@ final class GateTest extends TestCase
         $fields = array("aaaaaemail", 11111, "bbbbbfirst", "ccccclast", "dddddaddr", "eeeeecomp");
         $s = $gate->Signature($fields);
         $_COOKIE["mc"] = $s;
-        $ref = array();
-        $err = $gate->Get_attributes($ref);
+		$err = $gate->Verify_cookie($s);
         $this->assertNull($err);
+        $ref = $gate->Decoded;
         $this->assertEquals($fields[0], $ref["email"]);
         $this->assertEquals($fields[1], $ref["m_id"]);
         $this->assertEquals($fields[2], $ref["first_name"]);

@@ -77,9 +77,16 @@ class Controller extends Config
 
         if (!$filter->Is_public()) {
 			$surface = $filter->roles[$role_name]->surface;
-            $err = empty($_REQUEST[$surface]) ? $filter->Forbid() : $filter->Forbid($_REQUEST[$surface]);
-            if ($err != null) {return $err;} // for authentication is 303
+            $err = empty($_REQUEST[$surface]) ? $filter->Verify_cookie() : $filter->Verify_cookie($_REQUEST[$surface]);
+            if ($err != null) {
+				return $filter->Forbid(); // 200 challenge or 303 redirect
+			} else {
+            	foreach ($filter->Decoded as $k => $v) {
+			    	$_REQUEST[$k] = $v;
+            	}
+			}
         }
+
         if (!$filter->Role_can()) {
             return new Gerror(401);
         }
