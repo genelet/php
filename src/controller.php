@@ -50,7 +50,6 @@ class Controller extends Config
                 : isset($_REQUEST[$this->provider_name])
                 ? new Procedure($dbi, null, $this->original, $role_name, $tag_name, $_REQUEST[$this->provider_name])
                 : new Procedure($dbi, null, $this->original, $role_name, $tag_name);
-			    if ($ticket->Is_public()) { return new Gerror(404); }
                 $err = $ticket->Handler();
 			    if ($err === null) { return new Gerror(401); }
                 if ($err->error_code == 303) { // success is 303
@@ -65,15 +64,15 @@ class Controller extends Config
             return new Gerror(404);
         }
 
-		if (!empty($url_key) && $cache_type===0) { // GET request with 4 in url
-			$_REQUEST[$filter->getCurrentKey()] = $url_key;
-		}
-        $OLD = $_REQUEST;
-
         $filter_name = ($this->project == "Genelet")
         ? '\\Genelet\\Filter'
         : '\\' . $this->project . '\\' . ucfirst($comp_name) . '\\Filter';
         $filter = new $filter_name($this->components[$comp_name], $action, $comp_name, $this->original, $role_name, $tag_name);
+
+		if (!empty($url_key) && $cache_type===0) { // GET request with 4 in url
+			$_REQUEST[$filter->current_key] = $url_key;
+		}
+        $OLD = $_REQUEST;
 
         if (!$filter->Is_public()) {
 			$surface = $filter->roles[$role_name]->surface;
@@ -101,7 +100,7 @@ class Controller extends Config
 			if ($cache->has($url_key)) {
 				return new Gerror(200, $cache->get($url_key));
 			 } elseif ($cache_type===1) { // GET id request
-				$_REQUEST[$filter->getCurrentKey()] = $url_key;
+				$_REQUEST[$filter->current_key] = $url_key;
 			 } elseif ($cache_type===2 && !empty($url_key)) {
 				$queries = unserialize(base64_decode(str_replace(['-','_'], ['+','/'], $url_key)));
 				foreach ($queries as $k => $v) { $_REQUEST[$k] = $v; }

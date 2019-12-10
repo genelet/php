@@ -17,7 +17,7 @@ class Filter extends Gate
 
 	public $actionHash;
 	public $fkArray;
-	private $current_key;
+	public $current_key;
 
 	public function __construct(object $comp, string $a_name, string $c_name, object $c, string $rv, string $cv) {
         parent::__construct($c, $rv, $cv);
@@ -57,10 +57,6 @@ class Filter extends Gate
 				$this->fkArray = $fks[$this->Role_name];
 			}
 		}
-	}
-
-	public function getCurrentKey() : string {
-		return $this->current_key;
 	}
 
 	public function Role_can() : bool {
@@ -179,7 +175,6 @@ class Filter extends Gate
 					$name .= "_" . str_replace(['+','/','='], ['-','_',''], base64_encode(serialize($_GET)));
 				}
 			}
-			$this->Role_name . 
 			$model->OTHER[$this->cache_url_name] = $this->script . "/" . $this->Role_name . "/" . $this->Component . "/" . $name . "." . $this->Tag_name;
         	$parts = explode("/", $_SERVER["REQUEST_URI"]);
         	$parts[3] = "json";
