@@ -31,7 +31,7 @@ class Scoder
         $cryptext = array_map('ord', str_split($this->CRYPTEXT));
 
         $out = array();
-        $k = $len / 2;
+        $k = intval( $len / 2 );
         foreach (str_split($text) as $c) {
             $cnew = self::mycrypt($cryptext, $len, ord($c), $k);
             array_push($out, $cnew[0]);

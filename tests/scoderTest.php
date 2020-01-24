@@ -21,7 +21,7 @@ final class ScoderTest extends TestCase
         $plain = "1234567890qwertyuiop[]asdfghjkl;'zxcvbnm,.!@#$%^&*()_+=-";
         $got = Scoder::Encode_scoder($plain, $crypt);
         $this->assertEquals(
-            "NwfY6LNVYSHOmOE3S3IHkKLhHR1fpt79YlOMtOwIOiLQ0ugjWGIdhPumUy0n35rQIB/D9dlIazQ=",
+			'jBz5VTKRdMShDa8Uado72u5eqRwO4E+5BWHAK5bzUeVEdtAs1flZq0B7nG7pRSL5ZdawFIFIMYU=',
             $got
         );
         $rev = Scoder::Decode_scoder($got, $crypt);
@@ -31,7 +31,7 @@ final class ScoderTest extends TestCase
         );
         $got = Scoder::Encode_scoder($crypt, $plain);
         $this->assertEquals(
-            "GMj9t2hFnP/mEltuqpREFSnUgdJ5Jd6I",
+            "VYm8sihfn6PmWUt16pFGETzWhcV0",
             $got
         );
         $rev = Scoder::Decode_scoder($got, $plain);

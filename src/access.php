@@ -5,7 +5,6 @@ namespace Genelet;
 
 include_once 'base.php';
 //include 'scoder.php';
-include 'randint.php';
 
 class Access extends Base
 {
