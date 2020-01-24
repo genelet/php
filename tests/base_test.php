@@ -11,7 +11,7 @@ final class BaseTest extends TestCase
     {
         $this->assertInstanceOf(
             Base::class,
-            new Base(json_decode(file_get_contents("../conf/test.conf")), "m", "json")
+            new Base(json_decode(file_get_contents("conf/test.conf")), "m", "json")
         );
     }
 
@@ -19,13 +19,13 @@ final class BaseTest extends TestCase
     {
         $this->assertInstanceOf(
             Base::class,
-            new Base(json_decode(file_get_contents("../conf/test.conf")), "m", "json")
+            new Base(json_decode(file_get_contents("conf/test.conf")), "m", "json")
         );
     }
 
     public function testBaseSimple(): void
     {
-        $b = new Base(json_decode(file_get_contents("../conf/test.conf")), "m", "json");
+        $b = new Base(json_decode(file_get_contents("conf/test.conf")), "m", "json");
         $this->assertEquals(
             "m",
             $b->Role_name
@@ -38,7 +38,7 @@ final class BaseTest extends TestCase
 
     public function testBaseIp(): void
     {
-        $base = new Base(json_decode(file_get_contents("../conf/test.conf")), "m", "json");
+        $base = new Base(json_decode(file_get_contents("conf/test.conf")), "m", "json");
         $_SERVER['HTTP_X_FORWARDED_FOR'] = "1.1.1.1";
         $this->assertEquals(
             "1.1.1.1",
@@ -51,7 +51,7 @@ final class BaseTest extends TestCase
      */
     public function testBaseCookie(): void
     {
-        $base = new Base(json_decode(file_get_contents("../conf/test.conf")), "m", "json");
+        $base = new Base(json_decode(file_get_contents("conf/test.conf")), "m", "json");
         $_SERVER["HTTP_HOST"] = "aaa.bbb.ccc";
         $base->Set_cookie("cname", "1234567", 1000);
         $this->assertEquals(

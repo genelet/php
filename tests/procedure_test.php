@@ -1,7 +1,6 @@
 <?php
 declare (strict_types = 1);
 namespace Genelet\Tests;
-include "../src/dbi.php";
 
 use PHPUnit\Framework\TestCase;
 use Genelet\Dbi;
@@ -12,12 +11,12 @@ final class ProcedureTest extends TestCase
 {
     public function testCreatedProcedure(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $dbi = new Dbi(new \PDO(...$conf->db));
 
         $this->assertInstanceOf(
             Procedure::class,
-            new Procedure($dbi, "/bb/m/e/comp?action=act", json_decode(file_get_contents("../conf/test.conf")), "m", "json", "db")
+            new Procedure($dbi, "/bb/m/e/comp?action=act", json_decode(file_get_contents("conf/test.conf")), "m", "json", "db")
         );
     }
 
@@ -26,9 +25,9 @@ final class ProcedureTest extends TestCase
      */
     public function testProcedureCallback(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $dbi = new Dbi(new \PDO(...$conf->db));
-        $proc = new Procedure($dbi, "/bb/m/e/comp?action=act", json_decode(file_get_contents("../conf/test.conf")), "m", "json", "facebook");
+        $proc = new Procedure($dbi, "/bb/m/e/comp?action=act", json_decode(file_get_contents("conf/test.conf")), "m", "json", "facebook");
         $_SERVER["HTTPS"] = "Yes";
         $_SERVER["HTTP_HOST"] = "aaa.bbb.com";
         $this->assertEquals(
@@ -39,7 +38,7 @@ final class ProcedureTest extends TestCase
 
     public function testProcedureAuthenticate(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $dbi = new Dbi(new \PDO(...$conf->db));
         $err = $dbi->Exec_sql(
             "drop table if exists testing_f");
@@ -94,7 +93,7 @@ END
 ");
         $this->assertNull($err);
 
-        $proc = new Procedure($dbi, "/bb/m/e/comp?action=act", json_decode(file_get_contents("../conf/test.conf")), "m", "json", "db");
+        $proc = new Procedure($dbi, "/bb/m/e/comp?action=act", json_decode(file_get_contents("conf/test.conf")), "m", "json", "db");
         $err = $proc->Run_sql(
             "SELECT x, autoid, 'ff', 'll', 'aa', 'cc' FROM testing WHERE id=? and x=?", 3, "ccc");
         $this->assertNull($err);

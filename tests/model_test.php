@@ -1,7 +1,6 @@
 <?php
 declare (strict_types = 1);
 namespace Genelet\Tests;
-include '../src/config.php';
 
 use PHPUnit\Framework\TestCase;
 use Genelet\Config;
@@ -26,7 +25,7 @@ final class ModelTest extends TestCase
 
     public function testCreatedModel(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $pdo = new \PDO(...$conf->db);
         $this->assertInstanceOf(
             Model::class,
@@ -36,7 +35,7 @@ final class ModelTest extends TestCase
 
     public function testModelExec(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $pdo = new \PDO(...$conf->db);
         $model = new Model($pdo, self::init());
         $err = $model->Exec_sql(
@@ -214,7 +213,7 @@ final class ModelTest extends TestCase
 
     public function testModelNextpages(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $pdo = new \PDO(...$conf->db);
         $model = new Model($pdo, self::init2());
         $t  = new Model($pdo, self::init2());

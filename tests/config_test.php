@@ -9,17 +9,17 @@ final class ConfigTest extends TestCase
 {
     public function testCreatedConfig(): void
     {
-        $content = file_get_contents("../conf/test.conf");
+        $content = file_get_contents("conf/test.conf");
         $config = json_decode($content);
         $this->assertInstanceOf(
             Config::class,
-            new Config(json_decode(file_get_contents("../conf/test.conf")))
+            new Config(json_decode(file_get_contents("conf/test.conf")))
         );
     }
 
     public function testConfig(): void
     {
-        $g = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $g = new Config(json_decode(file_get_contents("conf/test.conf")));
         $this->assertEquals(
             "aa",
             $g->document_root

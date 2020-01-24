@@ -1,7 +1,6 @@
 <?php
 declare (strict_types = 1);
 namespace Genelet\Tests;
-include '../src/config.php';
 
 use PHPUnit\Framework\TestCase;
 use Genelet\Config;
@@ -11,7 +10,7 @@ final class DbiTest extends TestCase
 {
     public function testCreatedDbi(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $pdo = new \PDO(...$conf->db);
         $this->assertInstanceOf(
             Dbi::class,
@@ -21,7 +20,7 @@ final class DbiTest extends TestCase
 
     public function testDbiExec(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $pdo = new \PDO(...$conf->db);
         $dbi = new Dbi($pdo);
         $err = $dbi->Exec_sql(
@@ -42,7 +41,7 @@ final class DbiTest extends TestCase
 
     public function testDbiDoSelect(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $pdo = new \PDO(...$conf->db);
         $dbi = new Dbi($pdo);
         $err = $dbi->Exec_sql(
@@ -86,7 +85,7 @@ final class DbiTest extends TestCase
 
     public function testDbiProcedure(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $pdo = new \PDO(...$conf->db);
         $dbi = new Dbi($pdo);
         $err = $dbi->Exec_sql(

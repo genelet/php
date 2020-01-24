@@ -1,7 +1,6 @@
 <?php
 declare (strict_types = 1);
 namespace Genelet\Tests;
-include '../src/config.php';
 
 use PHPUnit\Framework\TestCase;
 use Genelet\Config;
@@ -11,7 +10,7 @@ final class CrudTest extends TestCase
 {
     public function testCreatedCrud(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $pdo = new \PDO(...$conf->db);
         $this->assertInstanceOf(
             Crud::class,
@@ -21,7 +20,7 @@ final class CrudTest extends TestCase
 
     public function testCrudExec(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $pdo = new \PDO(...$conf->db);
         $crud = new Crud($pdo, "testing");
         $err = $crud->Exec_sql(
@@ -37,7 +36,7 @@ final class CrudTest extends TestCase
 
     public function testCrudStrings(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $pdo = new \PDO(...$conf->db);
         $crud = new Crud($pdo, "testing");
 
@@ -87,7 +86,7 @@ final class CrudTest extends TestCase
 
     public function testCrudActions(): void
     {
-        $conf = new Config(json_decode(file_get_contents("../conf/test.conf")));
+        $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $pdo = new \PDO(...$conf->db);
         $crud = new Crud($pdo, "testing");
 

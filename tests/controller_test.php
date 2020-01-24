@@ -2,9 +2,6 @@
 declare (strict_types = 1);
 namespace Genelet\Tests;
 
-include "../src/model.php";
-include "../src/filter.php";
-
 use PHPUnit\Framework\TestCase;
 use Genelet\Controller;
 use Genelet\Model;
@@ -65,7 +62,7 @@ final class ControllerTest extends TestCase
 
     public function testCreatedController(): void
     {
-		$c = json_decode(file_get_contents("../conf/test.conf"));
+		$c = json_decode(file_get_contents("conf/test.conf"));
         $pdo = new \PDO(...$c->{"Db"});
         $t  = new Model($pdo, self::init2());
         $tf = new Model($pdo, self::init3());
@@ -82,7 +79,7 @@ final class ControllerTest extends TestCase
      */
     public function testRunController(): void
     {
-		$c = json_decode(file_get_contents("../conf/test.conf"));
+		$c = json_decode(file_get_contents("conf/test.conf"));
         $pdo = new \PDO(...$c->{"Db"});
         $t  = new Model($pdo, self::init2());
         $tf = new Model($pdo, self::init3());

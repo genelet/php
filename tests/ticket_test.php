@@ -11,13 +11,13 @@ final class TicketTest extends TestCase
     {
         $this->assertInstanceOf(
             Ticket::class,
-            new Ticket("/bb/m/e/comp?action=act", json_decode(file_get_contents("../conf/test.conf")), "m", "json", "db")
+            new Ticket("/bb/m/e/comp?action=act", json_decode(file_get_contents("conf/test.conf")), "m", "json", "db")
         );
     }
 
     public function testTicketProvider(): void
     {
-        $base = new Ticket("/bb/m/e/comp?action=act", json_decode(file_get_contents("../conf/test.conf")), "m", "json");
+        $base = new Ticket("/bb/m/e/comp?action=act", json_decode(file_get_contents("conf/test.conf")), "m", "json");
         $this->assertEquals(
             "db",
             $base->Provider
@@ -30,7 +30,7 @@ final class TicketTest extends TestCase
     public function testTicketAuthenticate(): void
     {
 
-        $ticket = new Ticket("/bb/m/e/comp?action=act", json_decode(file_get_contents("../conf/test.conf")), "m", "json", "db");
+        $ticket = new Ticket("/bb/m/e/comp?action=act", json_decode(file_get_contents("conf/test.conf")), "m", "json", "db");
         $err = $ticket->Authenticate("hello", "world");
         $this->assertNull($err);
         $this->assertEquals("hello", $ticket->Out_hash["login"]);
@@ -45,7 +45,7 @@ final class TicketTest extends TestCase
      */
     public function testTicketHandler(): void
     {
-        $ticket = new Ticket("/bb/m/e/comp?action=act", json_decode(file_get_contents("../conf/test.conf")), "m", "json", "db");
+        $ticket = new Ticket("/bb/m/e/comp?action=act", json_decode(file_get_contents("conf/test.conf")), "m", "json", "db");
         $_SERVER["REQUEST_URI"] = "/bb/m/e/login?request_uri=xxxx";
         $_SERVER["HTTP_HOST"] = "aaa.bbb.com";
         $err = $ticket->Handler();

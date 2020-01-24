@@ -11,13 +11,13 @@ final class AccessTest extends TestCase
     {
         $this->assertInstanceOf(
             Access::class,
-            new Access(json_decode(file_get_contents("../conf/test.conf")), "m", "json")
+            new Access(json_decode(file_get_contents("conf/test.conf")), "m", "json")
         );
     }
 
 	public function testAccessDigest(): void
 	{
-        $access = new Access(json_decode(file_get_contents("../conf/test.conf")), "m", "json");
+        $access = new Access(json_decode(file_get_contents("conf/test.conf")), "m", "json");
 		$access->Endtime = 88888;
 		$stamp = 123456;
 		$str = "sdfdsgfsdgd";
@@ -30,7 +30,7 @@ final class AccessTest extends TestCase
 
     public function testAccessSetip(): void
     {
-        $access = new Access(json_decode(file_get_contents("../conf/test.conf")), "m", "json");
+        $access = new Access(json_decode(file_get_contents("conf/test.conf")), "m", "json");
         $_SERVER["REMOTE_ADDR"] = "192.168.29.30";
         $ip = $access->Set_ip();
         $this->assertEquals("192.168.29.30", $ip);
@@ -41,7 +41,7 @@ final class AccessTest extends TestCase
 
     public function testAccessSignature(): void
     {
-        $access = new Access(json_decode(file_get_contents("../conf/test.conf")), "m", "json");
+        $access = new Access(json_decode(file_get_contents("conf/test.conf")), "m", "json");
         $_SERVER["REQUEST_TIME"] = "0";
         $_SERVER["REMOTE_ADDR"] = "192.168.29.30";
         $fields = array("aaaaa", "bbbbb", "ccccc", "ddddd", "eeeee");

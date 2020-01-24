@@ -11,7 +11,7 @@ final class GateTest extends TestCase
     {
         $this->assertInstanceOf(
             Gate::class,
-            new Gate(json_decode(file_get_contents("../conf/test.conf")), "m", "json")
+            new Gate(json_decode(file_get_contents("conf/test.conf")), "m", "json")
         );
     }
 
@@ -20,7 +20,7 @@ final class GateTest extends TestCase
      */
     public function testGateForbid(): void
     {
-        $gate = new Gate(json_decode(file_get_contents("../conf/test.conf")), "m", "e");
+        $gate = new Gate(json_decode(file_get_contents("conf/test.conf")), "m", "e");
         $_SERVER["REQUEST_TIME"] = "0";
         $_SERVER["REMOTE_ADDR"] = "192.168.29.30";
         $fields = array("aaaaa", "bbbbb", "ccccc", "ddddd", "eeeee");
@@ -44,13 +44,13 @@ final class GateTest extends TestCase
      */
     public function testGateLogout(): void
     {
-        $gate = new Gate(json_decode(file_get_contents("../conf/test.conf")), "m", "e");
+        $gate = new Gate(json_decode(file_get_contents("conf/test.conf")), "m", "e");
         $_SERVER["HTTP_HOST"] = "aaa.bbb.ccc";
         $err = $gate->Handler_logout();
         $this->assertIsObject($err);
         $this->assertEquals(303, $err->error_code);
         $this->assertEquals("/", $err->error_string);
-        $gate = new Gate(json_decode(file_get_contents("../conf/test.conf")), "m", "json");
+        $gate = new Gate(json_decode(file_get_contents("conf/test.conf")), "m", "json");
         $err = $gate->Handler_logout();
         $this->assertIsObject($err);
         $this->assertEquals(303, $err->error_code);
@@ -61,7 +61,7 @@ final class GateTest extends TestCase
      */
     public function testGateGetAttributes(): void
     {
-        $gate = new Gate(json_decode(file_get_contents("../conf/test.conf")), "m", "e");
+        $gate = new Gate(json_decode(file_get_contents("conf/test.conf")), "m", "e");
         $_SERVER["REQUEST_TIME"] = "0";
         $_SERVER["REMOTE_ADDR"] = "192.168.29.30";
         $fields = array("aaaaaemail", 11111, "bbbbbfirst", "ccccclast", "dddddaddr", "eeeeecomp");

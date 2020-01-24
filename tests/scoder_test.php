@@ -11,13 +11,13 @@ final class ScoderTest extends TestCase
     {
         $this->assertInstanceOf(
             Scoder::class,
-            new Scoder("../conf/test.confmjsondb")
+            new Scoder("conf/test.confmjsondb")
         );
     }
 
     public function testScoder(): void
     {
-        $crypt = "../conf/test.confmjsondb";
+        $crypt = "conf/test.confmjsondb";
         $plain = "1234567890qwertyuiop[]asdfghjkl;'zxcvbnm,.!@#$%^&*()_+=-";
         $got = Scoder::Encode_scoder($plain, $crypt);
         $this->assertEquals(

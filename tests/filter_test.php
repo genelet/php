@@ -1,7 +1,6 @@
 <?php
 declare (strict_types = 1);
 namespace Genelet\Tests;
-include "../src/model.php";
 
 use PHPUnit\Framework\TestCase;
 use Genelet\Filter;
@@ -38,13 +37,13 @@ final class FilterTest extends TestCase
     {
         $this->assertInstanceOf(
             Filter::class,
-            new Filter(self::init(), "startnew", "testing", json_decode(file_get_contents("../conf/test.conf")), "m", "json", "db")
+            new Filter(self::init(), "startnew", "testing", json_decode(file_get_contents("conf/test.conf")), "m", "json", "db")
         );
     }
 
     public function testFilterCan(): void
     {
-        $filter = new Filter(self::init(), "startnew", "testing", json_decode(file_get_contents("../conf/test.conf")), "cc", "e", "db");
+        $filter = new Filter(self::init(), "startnew", "testing", json_decode(file_get_contents("conf/test.conf")), "cc", "e", "db");
 		$ARGS =& $filter->ARGS;
 		$_REQUEST["x"] = "bbb";
         $this->assertEquals("bbb", $ARGS["x"]);
@@ -54,13 +53,13 @@ final class FilterTest extends TestCase
 		$this->assertFalse($filter->Is_admin());
 		$this->assertFalse($filter->Is_normal_role());
 
-        $filter = new Filter(self::init(), "filter", "testing", json_decode(file_get_contents("../conf/test.conf")), "a", "e", "db");
+        $filter = new Filter(self::init(), "filter", "testing", json_decode(file_get_contents("conf/test.conf")), "a", "e", "db");
 		$ARGS =& $filter->ARGS;
 		$this->assertFalse($filter->Is_public());
 		$this->assertTrue($filter->Is_admin());
 		$this->assertFalse($filter->Is_normal_role());
 
-        $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("../conf/test.conf")), "m", "e", "db");
+        $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("conf/test.conf")), "m", "e", "db");
 		$ARGS =& $filter->ARGS;
 		$_REQUEST["m_id"] = 100;
 		$_REQUEST["x"] = "bbb";
@@ -76,7 +75,7 @@ final class FilterTest extends TestCase
     public function testFilterBefore(): void
     {
 		$_SERVER["X-Forwarded-ID"] = 4;
-        $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("../conf/test.conf")), "m", "e", "db");
+        $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("conf/test.conf")), "m", "e", "db");
 		$ARGS =& $filter->ARGS;
 
         $pdo = new \PDO(...$filter->db);
@@ -137,7 +136,7 @@ final class FilterTest extends TestCase
     public function testFilterAfter(): void
     {
 		$_SERVER["X-Forwarded-ID"] = 4;
-        $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("../conf/test.conf")), "m", "e", "db");
+        $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("conf/test.conf")), "m", "e", "db");
 		$ARGS =& $filter->ARGS;
 
         $pdo = new \PDO(...$filter->db);
