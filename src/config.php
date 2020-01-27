@@ -8,15 +8,17 @@ class Chartag
 	public $content_type;
 	public $case;
 	public $challenge;
+	public $logged;
 	public $logout;
 	public $failed;
 	public function __construct(object $t) {
 		$this->content_type = $t->{"Content_type"};
 		$this->case = isset($t->{"Case"}) ? $t->{"Case"} : 0;
-		if ($this->case == 1) {
-			$this->challenge = isset($t->{"Challenge"}) ? $t->{"Challenge"} : "Challenge";
-			$this->logout = isset($t->{"Logout"}) ? $t->{"Logout"} : "Logout";
-			$this->failed = isset($t->{"Failed"}) ? $t->{"Failed"} : "Failed";
+		if ($this->case > 0) {
+			$this->challenge = isset($t->{"Challenge"}) ? $t->{"Challenge"} : "challenge";
+			$this->logged = isset($t->{"Logged"}) ? $t->{"Logged"} : "logged";
+			$this->logout = isset($t->{"Logout"}) ? $t->{"Logout"} : "logout";
+			$this->failed = isset($t->{"Failed"}) ? $t->{"Failed"} : "failed";
 		}
 	}
 }
@@ -182,9 +184,14 @@ class Config
 		if (isset($c->{"Log"})) {
 			$this->logger = new Logger($c->{"Log"}->{"Filename"}, $c->{"Log"}->{"Level"});
 		}
-		$this->chartags = array();
-		foreach ($c->{"Chartags"} as $short => $tag) {
-			$this->chartags[$short] = new Chartag($tag);
+		$c_html = new Chartag(json_decode('{"Content_type":"text/html; charset=\"UTF-8\""}'));
+		$c_xml = new Chartag(json_decode('{"Content_type":"application/xml; charset=\"UTF-8\"", "Challenge":"challenge", "Logged":"logged", "Logout":"logout", "Failed":"failed", "Case":2}'));
+		$c_json  = new Chartag(json_decode('{"Content_type":"application/json; charset=\"UTF-8\"", "Challenge":"challenge", "Logged":"logged", "Logout":"logout", "Failed":"failed", "Case":1}'));
+		$this->chartags = array("html"=>$c_html, "json"=>$c_json, "xml"=>$c_xml);
+		if (isset($c->{"Chartags"})) {
+			foreach ($c->{"Chartags"} as $short => $tag) {
+				$this->chartags[$short] = new Chartag($tag);
+			}
 		}
 		$this->roles = array();
 		foreach ($c->{"Roles"} as $short => $role) {

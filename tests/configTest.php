@@ -13,7 +13,7 @@ final class ConfigTest extends TestCase
         $config = json_decode($content);
         $this->assertInstanceOf(
             Config::class,
-            new Config(json_decode(file_get_contents("conf/test.conf")))
+            new Config($config)
         );
     }
 
@@ -33,8 +33,20 @@ final class ConfigTest extends TestCase
             $g->db[0]
         );
         $this->assertEquals(
+            "text/html; charset=\"UTF-8\"",
+            $g->chartags["e"]->content_type
+        );
+        $this->assertEquals(
             "application/json; charset=\"UTF-8\"",
             $g->chartags["json"]->content_type
+        );
+        $this->assertEquals(
+            "challenge",
+            $g->chartags["json"]->challenge
+        );
+        $this->assertEquals(
+            1,
+            $g->chartags["json"]->case
         );
         $this->assertEquals(
             360000,
