@@ -3,9 +3,6 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-include_once 'base.php';
-//include 'scoder.php';
-
 class Access extends Base
 {
 	public $Decoded;

@@ -3,8 +3,6 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-include_once 'gerror.php';
-
 class Dbi
 {
     public $Conn;

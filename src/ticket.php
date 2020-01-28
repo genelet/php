@@ -3,8 +3,6 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-include_once 'access.php';
-
 class Ticket extends Access
 {
     public $Uri;

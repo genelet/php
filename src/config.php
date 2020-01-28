@@ -1,7 +1,7 @@
 <?php
 declare (strict_types = 1);
+
 namespace Genelet;
-include_once "logger.php";
 
 class Chartag
 {

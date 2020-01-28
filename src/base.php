@@ -2,9 +2,6 @@
 declare (strict_types = 1);
 namespace Genelet;
 
-include_once 'config.php';
-include_once 'gerror.php';
-
 class Base extends Config
 {
     public $Role_name;

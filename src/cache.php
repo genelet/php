@@ -3,7 +3,6 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-include_once "base.php";
 use Psr\SimpleCache;
 
 class Cache extends Base implements \Psr\SimpleCache\CacheInterface

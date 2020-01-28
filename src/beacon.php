@@ -3,8 +3,6 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-include_once "controller.php";
-
 class Beacon extends Controller {
 	public $ip;
 	public $Role_name;

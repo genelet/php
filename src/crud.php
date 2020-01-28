@@ -3,8 +3,6 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-include 'dbi.php';
-
 class Crud extends Dbi
 {
     public $Current_table;

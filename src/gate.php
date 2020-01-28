@@ -3,8 +3,6 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-include_once 'access.php';
-
 class Gate extends Access
 {
     public function Forbid(): ?Gerror

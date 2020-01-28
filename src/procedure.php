@@ -3,8 +3,6 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-include "ticket.php";
-
 class Procedure extends Ticket
 {
     protected $dbi;

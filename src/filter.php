@@ -3,9 +3,6 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-include 'gate.php';
-include 'procedure.php';
-
 class Filter extends Gate
 {
 	public $ARGS;

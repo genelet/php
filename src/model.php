@@ -3,8 +3,6 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-include 'crud.php';
-
 class Model extends Crud
 {
     public $ARGS;

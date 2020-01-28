@@ -3,8 +3,6 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-include "procedure.php";
-
 class Oauth2 extends Procedure
 {
     protected $Defaults;
