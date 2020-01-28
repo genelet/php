@@ -23,10 +23,13 @@ class Controller extends Config
     public function Run(): ?Gerror
     {
         // self::cross_domain();
-        if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {return new Gerror(200);}
-
-        if (empty($this->default_actions[$_SERVER["REQUEST_METHOD"]])) {
-            return new Gerror(405);
+        if (isset($_SERVER["REQUEST_METHOD"])) {
+            if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+                return new Gerror(200);
+            }
+            if (empty($this->default_actions[$_SERVER["REQUEST_METHOD"]])) {
+                return new Gerror(405);
+            }
         }
 
         list ($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, $err) = $this->getUrl();

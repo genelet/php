@@ -185,9 +185,12 @@ class Config
 			$this->logger = new Logger($c->{"Log"}->{"Filename"}, $c->{"Log"}->{"Level"});
 		}
 		$c_html = new Chartag(json_decode('{"Content_type":"text/html; charset=\"UTF-8\""}'));
+		$c_csv  = new Chartag(json_decode('{"Content_type":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}'));
+		$c_pdf  = new Chartag(json_decode('{"Content_type":"application/pdf"}'));
+		$c_txt  = new Chartag(json_decode('{"Content_type":"text/plain; charset=\"UTF-8\""}'));
 		$c_xml = new Chartag(json_decode('{"Content_type":"application/xml; charset=\"UTF-8\"", "Challenge":"challenge", "Logged":"logged", "Logout":"logout", "Failed":"failed", "Case":2}'));
 		$c_json  = new Chartag(json_decode('{"Content_type":"application/json; charset=\"UTF-8\"", "Challenge":"challenge", "Logged":"logged", "Logout":"logout", "Failed":"failed", "Case":1}'));
-		$this->chartags = array("html"=>$c_html, "json"=>$c_json, "xml"=>$c_xml);
+		$this->chartags = array("html"=>$c_html, "json"=>$c_json, "xml"=>$c_xml, "csv"=>$c_csv, "pdf"=>$c_pdf, "txt"=>$c_txt);
 		if (isset($c->{"Chartags"})) {
 			foreach ($c->{"Chartags"} as $short => $tag) {
 				$this->chartags[$short] = new Chartag($tag);
