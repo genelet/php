@@ -5,12 +5,8 @@ namespace Genelet;
 
 class Gate extends Access
 {
-    public function Forbid(): ?Gerror
+    public function Forbid(): string
     {
-		if ($this->Is_json()) {
-            return new Gerror(200, $this->tag_obj->challenge);
-        }
-
         $escaped = urlencode($_SERVER["REQUEST_URI"]);
         $this->Set_cookie_session($this->go_probe_name, $escaped);
         $this->Set_cookie_expire($this->role_obj->surface);
@@ -34,7 +30,7 @@ class Gate extends Access
 		if (!empty($first)) {
 			$redirect .= "&" . $this->provider_name . "=$first";
 		}
-        return new Gerror(303, $redirect);
+        return $redirect;
     }
 
     public function Handler_logout(): ?Gerror

@@ -76,7 +76,12 @@ class Controller extends Config
 			$surface = $filter->roles[$role_name]->surface;
             $err = empty($_REQUEST[$surface]) ? $filter->Verify_cookie() : $filter->Verify_cookie($_REQUEST[$surface]);
             if ($err != null) {
-				return $filter->Forbid(); // 200 challenge or 303 redirect
+				$code = $err->error_code;
+        		if ($this->Is_json_tag($tag_name)) {
+					header("Content-Type: application/json");
+					return new Gerror(200, json_encode(["success" => false, "error_code" => $err->error_code, "error_string" => $filter->tag_obj->challenge]));
+				}
+				return new Gerror(303, $filter->Forbid());
 			} else {
             	foreach ($filter->Decoded as $k => $v) {
 			    	$_REQUEST[$k] = $v;

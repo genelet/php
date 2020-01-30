@@ -34,9 +34,8 @@ final class GateTest extends TestCase
         $_COOKIE["mc"] .= "21";
         $err = $gate->Verify_cookie();
         $this->assertIsObject($err);
-		$err = $gate->Forbid();
-        $this->assertEquals(303, $err->error_code);
-        $this->assertEquals("/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Fcomp%3Faction%3Dact&go_err=1025&provider=db", $err->error_string);
+		$str = $gate->Forbid();
+        $this->assertEquals("/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Fcomp%3Faction%3Dact&go_err=1025&provider=db", $str);
     }
 
     /**
