@@ -133,6 +133,21 @@ END
         $this->assertEquals("3", $hash["total"]);
         $this->assertEquals("4", $hash["sums"]);
 
+        $lists = array();
+        $labels = array("bid", "bx");
+        $hash = array();
+        $names = array("total"=>\PDO::PARAM_INT, "sums"=>\PDO::PARAM_INT);
+        $err = $dbi->Select_do_proc_label($lists, $labels, $hash, $names, "test_proc", 3);
+        $this->assertNull($err);
+        $this->assertEquals(1, $lists[0]["bid"]);
+        $this->assertEquals(2, $lists[1]["bid"]);
+        $this->assertEquals(3, $lists[2]["bid"]);
+        $this->assertEquals("aaa", $lists[0]["bx"]);
+        $this->assertEquals("bbb", $lists[1]["bx"]);
+        $this->assertEquals("ccc", $lists[2]["bx"]);
+        $this->assertEquals(3, $hash["total"]);
+        $this->assertEquals(4, $hash["sums"]);
+
         $err = $dbi->Exec_sql(
             "drop procedure if exists test_proc");
         $this->assertNull($err);

@@ -102,13 +102,32 @@ class Dbi
         if ($sth == false) {return new Gerror(1071, $this->errstr());}
         $result = $sth->execute($args);
         if ($result === false) {
-			return new Gerror(1072, $this->errstr());
-		}
-        while ($row = $sth->fetch(\PDO::FETCH_NUM, \PDO::FETCH_ORI_NEXT)) {
-            $item = array();
-            foreach ($select_labels as $i => $key) {
-                $item[$key] = $row[$i];
+            return new Gerror(1072, $this->errstr());
+        }
+        $is_map = count(array_filter(array_keys($select_labels),'is_string'))>0;
+        $xs = array();
+        $i = 0;
+        foreach ($select_labels as $k => $v) {
+            if ($is_map) {
+                // PDO::PARAM_BOOL (integer) PDO::PARAM_NULL (integer) PDO::PARAM_INT (integer) PDO::PARAM_STR (integer) PDO::PARAM_STR_NATL (integer) PDO::PARAM_STR_CHAR (integer) PDO::PARAM_LOB (integer) PDO::PARAM_INPUT_OUTPUT (integer)
+                $sth->bindColumn($i+1, $xs[$i], $v);
+            } else {
+                $sth->bindColumn($i+1, $xs[$i]);
             }
+            $i++;
+        }
+        while ($row = $sth->fetch(\PDO::FETCH_ASSOC, \PDO::FETCH_ORI_NEXT)) {
+            $item = array();
+            $i = 0;
+            foreach ($select_labels as $k => $v) {
+                if ($is_map) {
+                    $item[$k] = $xs[$i];
+                } else {
+                    $item[$v] = $xs[$i];
+                }
+                $i++;
+            }
+            // array_push only pushes references, push $labels directly makes it contain only the last item, many times
             array_push($lists, $item);
         }
         $sth = null;
