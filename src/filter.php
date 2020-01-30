@@ -3,7 +3,7 @@ declare (strict_types = 1);
 
 namespace Genelet;
 
-class Filter extends Gate
+class Filter extends Access
 {
 	public $ARGS;
 
