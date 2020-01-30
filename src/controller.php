@@ -32,6 +32,7 @@ class Controller extends Config
         if (empty($this->chartags[$tag_name])) {
             return new Gerror(404);
         }
+		$tag_obj = $this->chartags[$tag_name];
 
         if ($role_name != $this->pubrole) {
             if (empty($this->roles[$role_name])) {
@@ -43,7 +44,7 @@ class Controller extends Config
 				$logout = $base->Handler_logout();
         		if ($this->Is_json_tag($tag_name)) {
 					header("Content-Type: application/json");
-					return new Gerror(200, json_encode(["success" => false, "error_string" => $filter->tag_obj->logout]));
+					return new Gerror(200, json_encode(["success" => false, "error_string" => $tag_obj->logout]));
 				}
                 return new Gerror(303, $logout);
             } elseif ($this->Is_login($comp_name) || $this->Is_oauth2($comp_name)) {
@@ -84,7 +85,7 @@ class Controller extends Config
 				$code = $err->error_code;
         		if ($this->Is_json_tag($tag_name)) {
 					header("Content-Type: application/json");
-					return new Gerror(200, json_encode(["success" => false, "error_code" => $err->error_code, "error_string" => $filter->tag_obj->challenge]));
+					return new Gerror(200, json_encode(["success" => false, "error_code" => $err->error_code, "error_string" => $tag_obj->challenge]));
 				}
 				return new Gerror(303, $filter->Forbid());
 			} else {
