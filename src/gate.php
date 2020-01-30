@@ -32,14 +32,4 @@ class Gate extends Access
 		}
         return $redirect;
     }
-
-    public function Handler_logout(): ?Gerror
-    {
-        $role = $this->role_obj;
-        $this->Set_cookie_expire($role->surface);
-        $this->Set_cookie_expire($role->surface . "_");
-        $this->Set_cookie_expire($this->go_probe_name);
-
-        return new Gerror(303, $role->logout);
-    }
 }

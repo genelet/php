@@ -59,4 +59,17 @@ final class BaseTest extends TestCase
             headers_sent()
         );
     }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testLogout(): void
+    {
+        $base = new Base(json_decode(file_get_contents("conf/test.conf")), "m", "e");
+        $_SERVER["HTTP_HOST"] = "aaa.bbb.ccc";
+        $base->Set_cookie("cname", "1234567", 1000);
+        $str = $base->Handler_logout();
+        $this->assertEquals("/", $str);
+    }
+
 }

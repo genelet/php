@@ -79,6 +79,15 @@ class Base extends Config
         $this->_set_cookie($name, "0", -365 * 24 * 3600);
     }
 
+    public function Handler_logout(): string
+    {
+        $role = $this->role_obj;
+        $this->Set_cookie_expire($role->surface);
+        $this->Set_cookie_expire($role->surface . "_");
+        $this->Set_cookie_expire($this->go_probe_name);
+        return $role->logout;
+    }
+
 	static public function base64_encode_url(string $string) : string {
     	return str_replace(['+','/','='], ['-','_',''], base64_encode($string));
 	}

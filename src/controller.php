@@ -39,8 +39,13 @@ class Controller extends Config
             }
 
             if ($this->Is_logout($comp_name)) {
-                $gate = new Gate($c, $role_name, $tag_name);
-                return $gate->Handler_logout();
+                $base = new Base($c, $role_name, $tag_name);
+				$logout = $base->Handler_logout();
+        		if ($this->Is_json_tag($tag_name)) {
+					header("Content-Type: application/json");
+					return new Gerror(200, json_encode(["success" => false, "error_string" => $filter->tag_obj->logout]));
+				}
+                return new Gerror(303, $logout);
             } elseif ($this->Is_login($comp_name) || $this->Is_oauth2($comp_name)) {
                 $dbi = new Dbi($this->pdo);
                 $ticket = $this->Is_oauth2($comp_name)

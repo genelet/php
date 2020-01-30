@@ -41,23 +41,6 @@ final class GateTest extends TestCase
     /**
      * @runInSeparateProcess
      */
-    public function testGateLogout(): void
-    {
-        $gate = new Gate(json_decode(file_get_contents("conf/test.conf")), "m", "e");
-        $_SERVER["HTTP_HOST"] = "aaa.bbb.ccc";
-        $err = $gate->Handler_logout();
-        $this->assertIsObject($err);
-        $this->assertEquals(303, $err->error_code);
-        $this->assertEquals("/", $err->error_string);
-        $gate = new Gate(json_decode(file_get_contents("conf/test.conf")), "m", "json");
-        $err = $gate->Handler_logout();
-        $this->assertIsObject($err);
-        $this->assertEquals(303, $err->error_code);
-    }
-
-    /**
-     * @runInSeparateProcess
-     */
     public function testGateGetAttributes(): void
     {
         $gate = new Gate(json_decode(file_get_contents("conf/test.conf")), "m", "e");
