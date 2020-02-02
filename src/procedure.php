@@ -17,13 +17,13 @@ class Procedure extends Ticket
     {
         $issuer = $this->Get_issuer();
         if (($issuer->screen & 1) != 0) {
-            $in_vals = array_push($in_vals, ip2long($this->Get_ip()));
+            array_push($in_vals, ip2long($this->Get_ip()));
         }
         if (($issuer->screen & 2) != 0 && !empty($this->Uri)) {
-            $in_vals = array_push($in_vals, $this->Uri);
+            array_push($in_vals, $this->Uri);
         }
-        // if ($issuer->screen & 4) !=0 {$in_vals= array_push($in_vals, $this->Get_ua())}
-        // if ($issuer->screen & 8) !=0 {$in_vals= array_push($in_vals, $this->Get_referer())}
+        // if ($issuer->screen & 4) !=0 {array_push($in_vals, $this->Get_ua())}
+        // if ($issuer->screen & 8) !=0 {array_push($in_vals, $this->Get_referer())}
         $out_pars = empty($issuer->out_pars) ? $this->role_obj->attributes : $issuer->out_pars;
         $this->Out_hash = array();
         return (strtolower(substr($call_name, 0, 7)) === "select ") ?
@@ -58,7 +58,7 @@ class Procedure extends Ticket
         $in_vals = array();
         foreach ($issuer->in_pars as $par) {
             if (!empty($back[$par])) {
-                $in_vals = array_push($in_vals, $back[$par]);
+                array_push($in_vals, $back[$par]);
             }
         }
 

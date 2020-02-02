@@ -33,6 +33,8 @@ class Controller extends Config
             return new Gerror(404);
         }
 		$tag_obj = $this->chartags[$tag_name];
+		$is_json = $this->Is_json_tag($tag_name);
+		$c = $this->original;
 
         if ($role_name != $this->pubrole) {
             if (empty($this->roles[$role_name])) {
@@ -42,21 +44,25 @@ class Controller extends Config
             if ($this->Is_logout($comp_name)) {
                 $base = new Base($c, $role_name, $tag_name);
 				$logout = $base->Handler_logout();
-        		if ($this->Is_json_tag($tag_name)) {
+        		if ($is_json) {
 					header("Content-Type: application/json");
-					return new Gerror(200, json_encode(["success" => false, "error_string" => $tag_obj->logout]));
+					return new Gerror(200, json_encode(["success" => true, "error_string" => $tag_obj->logout]));
 				}
                 return new Gerror(303, $logout);
             } elseif ($this->Is_login($comp_name) || $this->Is_oauth2($comp_name)) {
                 $dbi = new Dbi($this->pdo);
                 $ticket = $this->Is_oauth2($comp_name)
-                ? new Oauth2($dbi, null, $this->original, $role_name, $tag_name, $comp_name)
+                ? new Oauth2($dbi, null, $c, $role_name, $tag_name, $comp_name)
                 : isset($_REQUEST[$this->provider_name])
-                ? new Procedure($dbi, null, $this->original, $role_name, $tag_name, $_REQUEST[$this->provider_name])
-                : new Procedure($dbi, null, $this->original, $role_name, $tag_name);
-                $err = $ticket->Handler();
+                ? new Procedure($dbi, null, $c, $role_name, $tag_name, $_REQUEST[$this->provider_name])
+                : new Procedure($dbi, null, $c, $role_name, $tag_name);
+                $err = ($is_json) ? $ticket->Handler_login():$ticket->Handler();
 			    if ($err === null) { return new Gerror(401); }
                 if ($err->error_code == 303) { // success is 303
+					if ($is_json) {
+						header("Content-Type: application/json");
+						return new Gerror(200, json_encode(["success" => true, "error_string" => $tag_obj->logged]));
+					}
                     return $err;
                 } // all other cases are login page error
                 return new Gerror(200, $this->login_page($role_name, $tag_name, $err));
@@ -71,7 +77,7 @@ class Controller extends Config
         $filter_name = ($this->project == "Genelet")
         ? '\\Genelet\\Filter'
         : '\\' . $this->project . '\\' . ucfirst($comp_name) . '\\Filter';
-        $filter = new $filter_name($this->components[$comp_name], $action, $comp_name, $this->original, $role_name, $tag_name);
+        $filter = new $filter_name($this->components[$comp_name], $action, $comp_name, $c, $role_name, $tag_name);
 
 		if (!empty($url_key) && $cache_type===0) { // GET request with 4 in url
 			$_REQUEST[$filter->current_key] = $url_key;
@@ -83,7 +89,7 @@ class Controller extends Config
             $err = empty($_REQUEST[$surface]) ? $filter->Verify_cookie() : $filter->Verify_cookie($_REQUEST[$surface]);
             if ($err != null) {
 				$code = $err->error_code;
-        		if ($this->Is_json_tag($tag_name)) {
+        		if ($is_json) {
 					header("Content-Type: application/json");
 					return new Gerror(200, json_encode(["success" => false, "error_code" => $err->error_code, "error_string" => $tag_obj->challenge]));
 				}
@@ -104,7 +110,7 @@ class Controller extends Config
         }
 
 		$ttl = isset($filter->actionHash["ttl"]) ? $filter->actionHash["ttl"] : $this->ttl;
-		$cache = new Cache($this->original, $role_name, $tag_name, $action, $comp_name, $cache_type, $ttl);
+		$cache = new Cache($c, $role_name, $tag_name, $action, $comp_name, $cache_type, $ttl);
 		if ($cache_type>0) {
 			if ($cache->has($url_key)) {
 				return new Gerror(200, $cache->get($url_key));
