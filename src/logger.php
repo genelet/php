@@ -47,15 +47,16 @@ class Logger implements \Psr\Log\LoggerInterface
 
 	public function log($level, $msg, array $c=null) : void {
 		if ($level < self::LEVELS[$this->current_level]) { return; }
-		$this->current_msg = $msg;
-		if (!empty($c)) { $this->current_msg .= implode("", $c); };
+		$t = gettype($msg);
+		$this->current_msg = ($t == "array" || $t == "object") ? print_r($msg, true) : $msg;
+		if (isset($c)) { $this->current_msg .= ", " . print_r($c, true); };
 		$ref = array();
 		foreach (self::LEVELS as $k=>$v) { $ref[$v] = $k; }
-		$msg = "[" . $ref[$level] . " " . getmypid() . "]" . $this->current_msg . "\n";
+		$mix = "[" . $ref[$level] . " " . getmypid() . "]" . $this->current_msg . "\n";
 		// Log to file
 		try {
 			$fh = fopen($this->filename, 'a');
-			fwrite($fh, $msg);
+			fwrite($fh, $mix);
 			fclose($fh);
 		} catch (\Throwable $e) {
 			throw new \RuntimeException("Could not open log file {$this->filename}", 0, $e);

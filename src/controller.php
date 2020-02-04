@@ -165,7 +165,7 @@ $logger->info("before completed.");
         if (empty($filter->actionHash["options"]) || array_search("no_method", $filter->actionHash["options"]) === false) {
             $action = $filter->Action;
 $logger->info("start model action: " . $action);
-            $model->$action($extra, ...$nextextra);
+            $err = $model->$action($extra, ...$nextextra);
             if ($err != null) {return new Gerror(200, $this->error_page($tag_name, $err));}
         }
 
