@@ -17,7 +17,8 @@ class Procedure extends Ticket
     {
         $issuer = $this->Get_issuer();
         if (($issuer->screen & 1) != 0) {
-            array_push($in_vals, ip2long($this->Get_ip()));
+			$ip = ip2long($this->Get_ip());
+            array_push($in_vals, ($ip===false) ? 0 : $ip);
         }
         if (($issuer->screen & 2) != 0 && !empty($this->Uri)) {
             array_push($in_vals, $this->Uri);

@@ -8,10 +8,12 @@ class Dbi
     public $Conn;
     public $Last_id;
     public $Affected;
+	public $logger;
 
-    public function __construct(\PDO $pdo)
+    public function __construct(\PDO $pdo, Logger $logger = null)
     {
         $this->Conn = $pdo;
+		if (isset($logger)) $this->logger = $logger;
     }
 
     private function errstr(): string
@@ -25,6 +27,7 @@ class Dbi
 
     public function Exec_sql(string $sql): ?Gerror
     {
+if (isset($this->logger)) { $this->logger->info($sql); }
         $n = $this->Conn->exec($sql);
         if ($n === false) {return new Gerror(1071, $this->errstr());}
         $this->Affected = $n;
@@ -33,6 +36,7 @@ class Dbi
 
     public function Do_sql(string $sql, ...$args): ?Gerror
     {
+if (isset($this->logger)) { $this->logger->info($sql.", ".print_r($args, true)); }
         $sth = $this->Conn->prepare($sql);
         if ($sth === false) {return new Gerror(1071, $this->errstr());}
         $result = $sth->execute($args);
@@ -45,6 +49,7 @@ class Dbi
 
     public function Do_sqls(string $sql, ...$args): ?Gerror
     {
+if (isset($this->logger)) { $this->logger->info($sql.", ".print_r($args, true)); }
         $sth = $this->Conn->prepare($sql);
         if ($sth === false) {return new Gerror(1071, $this->errstr());}
         foreach ($args as $item) {
@@ -58,6 +63,7 @@ class Dbi
 
     public function Get_args(array &$res, string $sql, ...$args): ?Gerror
     {
+if (isset($this->logger)) { $this->logger->info($sql.", ".print_r($args, true)); }
         $lists = array();
         $err = $this->Select_sql($lists, $sql, ...$args);
         if ($err != null) {return $err;}
@@ -71,6 +77,7 @@ class Dbi
 
     public function Get_sql_label(array &$res, array $select_labels, string $sql, ...$args): ?Gerror
     {
+if (isset($this->logger)) { $this->logger->info($sql.", ".print_r($args, true)); }
         $lists = array();
         $err = $this->Select_sql_label($lists, $select_labels, $sql, ...$args);
         if ($err != null) {return $err;}
@@ -84,6 +91,7 @@ class Dbi
 
     public function Select_sql(array &$lists, string $sql, ...$args): ?Gerror
     {
+if (isset($this->logger)) { $this->logger->info($sql.", ".print_r($args, true)); }
         $sth = $this->Conn->prepare($sql);
         if ($sth === false) {return new Gerror(1071, $this->errstr());}
         $result = $sth->execute($args);
@@ -98,6 +106,7 @@ class Dbi
 
     public function Select_sql_label(array &$lists, array $select_labels, string $sql, ...$args): ?Gerror
     {
+if (isset($this->logger)) { $this->logger->info($sql.", ".print_r($args, true)); }
         $sth = $this->Conn->prepare($sql, array(\PDO::ATTR_CURSOR => \PDO::CURSOR_SCROLL));
         if ($sth == false) {return new Gerror(1071, $this->errstr());}
         $result = $sth->execute($args);
@@ -136,6 +145,7 @@ class Dbi
 
     public function Do_proc(string $proc_name, ...$args): ?Gerror
     {
+if (isset($this->logger)) { $this->logger->info($proc_name.", ".print_r($args, true)); }
         $n = sizeof($args);
         $str = "CALL " . $proc_name . "(" . implode(',', array_fill(0, $n, '?'));
         $str .= ")";
@@ -145,6 +155,7 @@ class Dbi
 
     public function Do_proc_label(array &$hash, array $names, string $proc_name, ...$args): ?Gerror
     {
+if (isset($this->logger)) { $this->logger->info($proc_name.", ".print_r($args, true)); }
         $n = sizeof($args);
         $str = "CALL " . $proc_name . "(" . implode(',', array_fill(0, $n, '?'));
         $str_n = "@" . implode(", @", $names);
@@ -157,6 +168,7 @@ class Dbi
 
     public function Select_proc_label(array &$lists, array $select_labels, string $proc_name, ...$args): ?Gerror
     {
+if (isset($this->logger)) { $this->logger->info($proc_name.", ".print_r($args, true)); }
         $n = sizeof($args);
         $str = "CALL " . $proc_name . "(" . implode(',', array_fill(0, $n, '?'));
         $str .= ")";
@@ -166,6 +178,7 @@ class Dbi
 
     public function Select_do_proc_label(array &$lists, array $select_labels, array &$hash, array $names, string $proc_name, ...$args): ?Gerror
     {
+if (isset($this->logger)) { $this->logger->info($proc_name.", ".print_r($args, true)); }
         $n = sizeof($args);
         $str = "CALL " . $proc_name . "(" . implode(',', array_fill(0, $n, '?'));
         $str_n = "@" . implode(", @", $names);

@@ -54,6 +54,10 @@ class Base extends Config
         return $ip;
     }
 
+	public function Get_ua(): string {
+		return $_SERVER['HTTP_USER_AGENT'];
+	}
+
     private function _set_cookie(string $name, string $value, int $current) : void
 	{
 		if ($this->Is_public()) { return; }

@@ -8,9 +8,9 @@ class Crud extends Dbi
     public $Current_table;
     public $Current_tables;
 
-    public function __construct(\PDO $pdo, string $tbl, array $tbls = null)
+    public function __construct(\PDO $pdo, string $tbl, array $tbls = null, Logger $logger = null)
     {
-        parent::__Construct($pdo);
+        parent::__Construct($pdo, $logger);
         $this->Current_table = $tbl;
         if ($tbls != null) {
             $this->Current_tables = $tbls;

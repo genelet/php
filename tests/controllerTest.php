@@ -4,6 +4,7 @@ namespace Genelet\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Genelet\Controller;
+use Genelet\Logger;
 use Genelet\Model;
 use Genelet\Filter;
 
@@ -67,10 +68,11 @@ final class ControllerTest extends TestCase
         $t  = new Model($pdo, self::init2());
         $tf = new Model($pdo, self::init3());
         $storage = ["t"=>$t, "tf"=>$tf];
+		$logger = new Logger($c->{"Log"}->{"Filename"}, $c->{"Log"}->{"Level"});
 
         $this->assertInstanceOf(
             Controller::class,
-            new Controller($c, $pdo, ["t"=>self::init2(),self::init3()], $storage)
+            new Controller($c, $pdo, ["t"=>self::init2(),self::init3()], $storage, $logger)
         );
     }
 
@@ -84,8 +86,9 @@ final class ControllerTest extends TestCase
         $t  = new Model($pdo, self::init2());
         $tf = new Model($pdo, self::init3());
         $storage = ["t"=>$t, "tf"=>$tf];
+		$logger = new Logger($c->{"Log"}->{"Filename"}, $c->{"Log"}->{"Level"});
 
-		$controller = new Controller($c, $pdo, ["t"=>self::init2(),self::init3()], $storage);
+		$controller = new Controller($c, $pdo, ["t"=>self::init2(),self::init3()], $storage, $logger);
 
         $err = $t->Exec_sql(
             "drop table if exists testing_f");
@@ -107,6 +110,7 @@ final class ControllerTest extends TestCase
         $this->assertNull($err);
 
 		$_SERVER["REQUEST_METHOD"] = "OPTIONS";
+        $_SERVER["REQUEST_URI"] = "/bb/m/e/comp?action=act";
 		$err = $controller->Run();
 		$this->assertIsObject($err);
 		$this->assertEquals(200, $err->error_code);
@@ -116,6 +120,7 @@ final class ControllerTest extends TestCase
         $_SERVER["REMOTE_ADDR"] = "192.168.29.30";
         $_SERVER["REQUEST_URI"] = "/bb/m/e/comp?action=act";
         $_SERVER["HTTP_HOST"] = "aaa.bbb.ccc";
+        $_SERVER["HTTP_USER_AGENT"] = "ua";
 		$_SERVER["REQUEST_METHOD"] = "GET";
 		$err = $controller->Run();
 		$this->assertIsObject($err);
@@ -194,7 +199,7 @@ final class ControllerTest extends TestCase
 		}
 		unset($_REQUEST["id"]);
 		$_REQUEST["action"] = "topics";
-		$controller = new Controller($c, $pdo, ["t"=>self::init2(),self::init3()], $storage);
+		$controller = new Controller($c, $pdo, ["t"=>self::init2(),self::init3()], $storage, $logger);
         $err = $controller->Run();
 		$this->assertIsObject($err);
 		$this->assertEquals(200, $err->error_code);
@@ -206,7 +211,7 @@ final class ControllerTest extends TestCase
 		}
 		unset($_REQUEST["id"]);
 		$_REQUEST["action"] = "topics";
-		$controller = new Controller($c, $pdo, ["t"=>self::init2(),self::init3()], $storage);
+		$controller = new Controller($c, $pdo, ["t"=>self::init2(),self::init3()], $storage, $logger);
         $err = $controller->Run();
 		$this->assertIsObject($err);
 		$this->assertEquals(200, $err->error_code);

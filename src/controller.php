@@ -9,12 +9,14 @@ class Controller extends Config
     public $pdo;
     public $components;
     public $Storage;
-    public function __construct(object $c, \PDO $pdo, array $components, array $storage)
+	public $logger;
+    public function __construct(object $c, \PDO $pdo, array $components, array $storage, Logger $log)
     {
         parent::__construct($c);
         $this->pdo = $pdo;
         $this->components = $components;
         $this->Storage = $storage;
+        $this->logger = $log;
     }
 
     public function Run(): ?Gerror
@@ -23,13 +25,21 @@ class Controller extends Config
         if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
             return new Gerror(200);
         }
+		$logger = $this->logger;
+$logger->screen_start($_SERVER["REQUEST_METHOD"], $_SERVER["REQUEST_URI"], $_SERVER["REMOTE_ADDR"], $_SERVER['HTTP_USER_AGENT']);
         if (empty($this->default_actions[$_SERVER["REQUEST_METHOD"]])) {
+$logger->info("request method not defined.");
             return new Gerror(405);
         }
-
+		
         list ($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, $err) = $this->getUrl();
         if (isset($err)) { return $err; }
+$logger->info("role=>" . $role_name);
+$logger->info("tag=>" . $tag_name);
+$logger->info("comp=>" . $comp_name);
+$logger->info("action=>" . $action);
         if (empty($this->chartags[$tag_name])) {
+$logger->info("tag not found.");
             return new Gerror(404);
         }
 		$tag_obj = $this->chartags[$tag_name];
@@ -37,11 +47,14 @@ class Controller extends Config
 		$c = $this->original;
 
         if ($role_name != $this->pubrole) {
+$logger->info("login role.");
             if (empty($this->roles[$role_name])) {
+$logger->info("role not found.");
                 return new Gerror(404);
             }
 
             if ($this->Is_logout($comp_name)) {
+$logger->info("logout.");
                 $base = new Base($c, $role_name, $tag_name);
 				$logout = $base->Handler_logout();
         		if ($is_json) {
@@ -50,6 +63,7 @@ class Controller extends Config
 				}
                 return new Gerror(303, $logout);
             } elseif ($this->Is_login($comp_name) || $this->Is_oauth2($comp_name)) {
+$logger->info("login using " . $this->provider_name);
                 $dbi = new Dbi($this->pdo);
                 $ticket = $this->Is_oauth2($comp_name)
                 ? new Oauth2($dbi, null, $c, $role_name, $tag_name, $comp_name)
@@ -59,18 +73,21 @@ class Controller extends Config
                 $err = ($is_json) ? $ticket->Handler_login():$ticket->Handler();
 			    if ($err === null) { return new Gerror(401); }
                 if ($err->error_code == 303) { // success is 303
+$logger->info("login succeeded.");
 					if ($is_json) {
 						header("Content-Type: application/json");
 						return new Gerror(200, json_encode(["success" => true, "error_string" => $tag_obj->logged]));
 					}
                     return $err;
                 } // all other cases are login page error
+$logger->info("login failed.");
                 return new Gerror(200, $this->login_page($role_name, $tag_name, $err));
             }
         }
         if (empty($this->components[$comp_name]) ||
             empty($this->components[$comp_name]->{"actions"}) ||
             empty($this->components[$comp_name]->{"actions"}->{$action})) {
+$logger->info("component or action not found.");
             return new Gerror(404);
         }
 
@@ -80,14 +97,17 @@ class Controller extends Config
         $filter = new $filter_name($this->components[$comp_name], $action, $comp_name, $c, $role_name, $tag_name);
 
 		if (!empty($url_key) && $cache_type===0) { // GET request with 4 in url
+$logger->info("ID from URL.");
 			$_REQUEST[$filter->current_key] = $url_key;
 		}
         $OLD = $_REQUEST;
 
         if (!$filter->Is_public()) {
+$logger->info("check authentication for not public role.");
 			$surface = $filter->roles[$role_name]->surface;
             $err = empty($_REQUEST[$surface]) ? $filter->Verify_cookie() : $filter->Verify_cookie($_REQUEST[$surface]);
             if ($err != null) {
+$logger->info("ticket check failed.");
 				$code = $err->error_code;
         		if ($is_json) {
 					header("Content-Type: application/json");
@@ -95,23 +115,28 @@ class Controller extends Config
 				}
 				return new Gerror(303, $filter->Forbid());
 			} else {
+$logger->info("ticket check successful.");
             	foreach ($filter->Decoded as $k => $v) {
 			    	$_REQUEST[$k] = $v;
             	}
 			}
+$logger->info("put decoded into the request object.");
         }
 
         if (!$filter->Role_can()) {
+$logger->info("acl failed.");
             return new Gerror(401);
         }
 
         if ($this->Is_loginas($action)) {
+$logger->info("login as ...");
             return $filter->Login_as();
         }
 
 		$ttl = isset($filter->actionHash["ttl"]) ? $filter->actionHash["ttl"] : $this->ttl;
 		$cache = new Cache($c, $role_name, $tag_name, $action, $comp_name, $cache_type, $ttl);
 		if ($cache_type>0) {
+$logger->info("caching starts...");
 			if ($cache->has($url_key)) {
 				return new Gerror(200, $cache->get($url_key));
 			 } elseif ($cache_type===1) { // GET id request
@@ -123,31 +148,37 @@ class Controller extends Config
 		}
 
         $err = $filter->Preset();
+$logger->info("preset completed.");
         if ($err != null) {return new Gerror(200, $this->error_page($tag_name, $err));}
 
         $model = $this->Storage[$comp_name];
         $lists = array();
         $other = array();
-        $model->Set_defaults($_REQUEST, $lists, $other, $this->Storage);
+        $model->Set_defaults($_REQUEST,$lists,$other,$this->Storage,$logger);
 
         $extra = array();
         $nextextra = array();
         $err = $filter->Before($model, $extra, $nextextra);
+$logger->info("before completed.");
         if ($err != null) {return new Gerror(200, $this->error_page($tag_name, $err));}
 
         if (empty($filter->actionHash["options"]) || array_search("no_method", $filter->actionHash["options"]) === false) {
             $action = $filter->Action;
+$logger->info("start model action: " . $action);
             $model->$action($extra, ...$nextextra);
             if ($err != null) {return new Gerror(200, $this->error_page($tag_name, $err));}
         }
 
         $err = $filter->After($model);
+$logger->info("after completed.");
         if ($err != null) {return new Gerror(200, $this->error_page($tag_name, $err));}
 
+$logger->info("start building content page.");
 		$result = $this->content_page($role_name, $filter->Component, $filter->Action, $tag_name, $OLD, $model->LISTS, $model->OTHER);
 		if ($cache_type>0) {
 			$cache->set($url_key, $result);
 		}
+$logger->info("end page, and sending to browser.");
 		return new Gerror(200, $result);
     }
 

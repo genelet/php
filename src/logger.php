@@ -31,9 +31,9 @@ class Logger implements \Psr\Log\LoggerInterface
         $this->current_level = $log_level;
     }
 
-	public function screen_start(string $method, string $uri='', string $ip, string $ua) : string {
+	public function screen_start(string $method, string $uri='', string $ip, string $ua) {
 
-		return $self->warning("GENELET LOGGER {New Screen}{".$_SERVER["REQUEST_TIME"]."}{$ip}{$method}$uri $ua");
+		return $this->warning("GENELET LOGGER {New Screen}{".$_SERVER["REQUEST_TIME"]."}{".$ip."}{".$method."}{".$uri."}{".$ua."}");
 	}
 
 	public function debug($msg, array $c=null)     { return $this->log(self::LEVELS[LogLevel::DEBUG], $msg, $c); }
@@ -46,7 +46,7 @@ class Logger implements \Psr\Log\LoggerInterface
 	public function emergency($msg, array $c=null) { return $this->log(self::LEVELS[LogLevel::EMERGENCY], $msg, $c); }
 
 	public function log($level, $msg, array $c=null) : void {
-		if ($level > self::LEVELS[$this->current_level]) { return; }
+		if ($level < self::LEVELS[$this->current_level]) { return; }
 		$this->current_msg = $msg;
 		if (!empty($c)) { $this->current_msg .= implode("", $c); };
 		$ref = array();

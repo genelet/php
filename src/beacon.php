@@ -10,8 +10,8 @@ class Beacon extends Controller {
 	public $headers; // this is for client REQUEST header
 	public $redirect;
 	
-	public function __construct(object $c, \PDO $pdo, array $components, array $storage, string $role, string $tag=null, string $ip=null, array $headers=null) {
-		parent::__construct($c, $pdo, $components, $storage);
+	public function __construct(object $c, \PDO $pdo, array $components, array $storage, Logger $logger, string $role, string $tag=null, string $ip=null, array $headers=null) {
+		parent::__construct($c, $pdo, $components, $storage, $logger);
 		$this->Role_name = $role;
 		if (isset($tag)) {$this->Tag_name=$tag;} else {$this->Tag_name="json";}
 		if (isset($ip)) {$this->ip=$ip;} else {$this->ip="127.0.0.1";}
@@ -31,6 +31,7 @@ class Beacon extends Controller {
 		$_SERVER['HTTP_HOST'] = "localhost";
 		$_SERVER['SCRIPT_NAME'] = $this->script;
 		$_SERVER['REMOTE_ADDR'] = $this->ip;
+		$_SERVER['HTTP_USER_AGENT'] = "ua";
 		$_SERVER["REQUEST_URI"] = $this->server_url.$this->script."/".$this->Role_name."/".$this->Tag_name."/".$obj;
 		if (isset($query)) {
 			$_SERVER["REQUEST_URI"] .= "?".$query;

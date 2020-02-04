@@ -45,13 +45,16 @@ class Model extends Crud
 		}
     }
 
-    public function Set_defaults(array $args, array $lists, array $other, array $storage = null)
+    public function Set_defaults(array $args, array $lists, array $other, array $storage = null, Logger $logger = null)
     {
         $this->ARGS = $args;
         $this->LISTS = $lists;
         $this->OTHER = $other;
         if ($storage != null) {
             $this->Storage = $storage;
+        }
+        if ($logger != null) {
+            $this->logger = $logger;
         }
     }
 
