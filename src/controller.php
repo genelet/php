@@ -212,7 +212,7 @@ $logger->info("end page, and sending to browser.");
     {
         if ($this->Is_json_tag($tag)) {
 			header("Content-Type: application/json");
-			return json_encode(["success" => true, "incoming" => $old, "included" => $lists, "relationships" => $other]);
+			return json_encode(["success" => true, "incoming" => $old, "data" => $lists, "included" => $other]);
 		}
         $loader = new \Twig\Loader\FilesystemLoader($this->template . "/" . $role . "/" . $comp);
         $twig = new \Twig\Environment($loader);

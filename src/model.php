@@ -335,13 +335,6 @@ class Model extends Crud
         $err = $this->Update_hash_nulls($field_values, array($id => $val), isset($ARGS[$this->EMPTIES]) ? $ARGS[$this->EMPTIES] : null, ...$extra);
         if ($err != null) {return $err;}
 
-        if (gettype($id) === "array") {
-            foreach ($id as $i => $v) {
-                $field_values[$v] = $val[$i];
-            }
-        } else {
-            $field_values[$id] = $val;
-        }
         $this->LISTS = array($field_values);
 
         return $this->process_after("Update", ...$extra);
