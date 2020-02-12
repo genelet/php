@@ -154,6 +154,9 @@ $logger->info("preset completed.");
         $model = $this->Storage[$comp_name];
         $lists = array();
         $other = array();
+		if (isset($filter->actionHash[$model->EMPTIES])) {
+			$_REQUEST[$model->EMPTIES] = $filter->actionHash[$model->EMPTIES];
+		}
         $model->Set_defaults($_REQUEST,$lists,$other,$this->Storage,$logger);
 
         $extra = array();
@@ -214,7 +217,7 @@ $logger->info("end page, and sending to browser.");
 			header("Content-Type: application/json");
 			return json_encode(["success" => true, "incoming" => $old, "data" => $lists, "included" => $other]);
 		}
-        $loader = new \Twig\Loader\FilesystemLoader($this->template . "/" . $role . "/" . $comp);
+        $loader = new \Twig\Loader\FilesystemLoader([$this->template . "/" . $role . "/" . $comp, $this->template . "/" . $role]);
         $twig = new \Twig\Environment($loader);
         return $twig->render($action . "." . $tag, array_merge(array_merge($old, $other), [$action => $lists]));
     }
