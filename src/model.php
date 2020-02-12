@@ -165,7 +165,7 @@ class Model extends Crud
         $field_values = array();
         $filted = $this->filtered_fields($pars);
         foreach ($filted as $f) {
-            if (isset($ARGS[$f])) {
+            if (!empty($ARGS[$f])) {
                 $field_values[$f] = $ARGS[$f];
             }
         }

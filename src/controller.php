@@ -208,7 +208,7 @@ $logger->info("end page, and sending to browser.");
         }
         $loader = new \Twig\Loader\FilesystemLoader($this->template . "/" . $role_name);
         $twig = new \Twig\Environment($loader);
-        return $twig->render($this->login_name . "." . $tag_name, ["error_code" => $err->error_code, "error_string" => $err->error_string]);
+        return $twig->render($this->login_name . "." . $tag_name, array_merge($_GET, ["error_code" => $err->error_code, "error_string" => $err->error_string]));
     }
 
     private function content_page(string $role, string $comp, string $action, string $tag, array $old, array $lists, array $other): string
