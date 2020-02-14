@@ -34,6 +34,9 @@ class Model extends Crud
 
     public $Total_force;
 
+	private $role_name;
+	private $tag_name;
+
 // I may move pdo to Set_default so nextpage shares the same pdo as caller?
     public function __construct(\PDO $pdo, object $comp)
     {
@@ -45,7 +48,7 @@ class Model extends Crud
 		}
     }
 
-    public function Set_defaults(array $args, array $lists, array $other, array $storage = null, Logger $logger = null)
+    public function Set_defaults(array $args, array $lists, array $other, array $storage=null, Logger $logger=null, string $role=null, string $tag=null)
     {
         $this->ARGS = $args;
         $this->LISTS = $lists;
@@ -56,7 +59,23 @@ class Model extends Crud
         if ($logger != null) {
             $this->logger = $logger;
         }
+		if ($role != null) {
+			$this->role_name = $role;
+		}
+		if ($tag != null) {
+			$this->tag_name = $tag;
+		}
     }
+
+	public function Get_rolename()
+	{
+		return $this->role_name;
+	}
+
+	public function Get_tagname()
+	{
+		return $this->tag_name;
+	}
 
     private function Initialize(object $comp)
     {
