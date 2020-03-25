@@ -9,11 +9,14 @@ class Ticket extends Access
     public $Out_hash; #map[string]interface{}
 	public $Provider;
 
+	private bool $basic;
+
     public function __construct(string $uri=null, object $c, string $r, string $t, string $p = null)
     {
         $this->Uri = $uri;
         parent::__construct($c, $r, $t);
 		$this->Provider = ($p === null) ? $this->Get_provider() : $p;
+		$this->basic = false;
     }
 
 	private function probe_value(string $input=null) : string {
@@ -27,6 +30,43 @@ class Ticket extends Access
 			}
 		}
 		return isset($input) ? $input : "/";
+	}
+
+    public function Basic(): ?Gerror
+    {
+        $issuer = $this->Get_issuer();
+        $cred = $issuer->credential;
+
+        $user = $_REQUEST[$cred[0]];
+        if(!empty($_SERVER['PHP_AUTH_USER'])) {
+            $user = $_SERVER['PHP_AUTH_USER'];
+            $this->basic = true;
+        }
+        $pw = $_REQUEST[$cred[1]];
+        if(!empty($_SERVER['PHP_AUTH_PW'])) {
+            $pw = $_SERVER['PHP_AUTH_PW'];
+            $this->basic = true;
+        }
+
+        if(empty($user) && empty($pw)) {
+            return new Gerror(1026);
+        }
+
+        $err = $this->Authenticate($user, $pw);
+        if ($err != null) {
+            return $err;
+        }
+
+        $attrs = $this->role_obj->attributes;
+		if (empty($this->Out_hash[$attrs[0]])) {
+			return new Gerror(1032);
+		}
+
+ 		return null;
+	}
+
+    public function IsBasic(): bool {
+		return $this->basic;
 	}
 
     public function Handler(): ?Gerror
@@ -45,11 +85,6 @@ class Ticket extends Access
             return new Gerror(intval($_REQUEST[$err_name]));
         }
 
-        return $this->Handler_login();
-    }
-
-    public function Handler_login(): ?Gerror
-    {
         $issuer = $this->Get_issuer();
         $cred = $issuer->credential;
 
@@ -61,32 +96,29 @@ class Ticket extends Access
 			$_REQUEST[$cred[1]] = null;
 		}
 
-// Credential = [code, error] MUST be fore oauth
+// Credential = [code, error] MUST be for oauth
         $err = $this->Authenticate($_REQUEST[$cred[0]], $_REQUEST[$cred[1]]);
         if ($err != null) {
             return $err;
         }
 
-        return $this->Handler_fields();
-    }
+        $attrs = $this->role_obj->attributes;
+		if (empty($this->Out_hash[$attrs[0]])) {
+			return new Gerror(1032);
+		}
 
-    public function Handler_fields(): ?Gerror
-    {
-        $role = $this->role_obj;
+		return null;
+	}
+
+	public function Get_fields() : array
+	{
         $fields = array();
-        foreach ($role->attributes as $i => $v) {
-            if (empty($this->Out_hash[$v])) {
-				if ($i===0) { return new Gerror(1032); }
-                continue;
-            }
+        foreach ($this->role_obj->attributes as $i => $v) {
             $fields[$i] = $this->Out_hash[$v];
         }
 
-        $signed = $this->Signature($fields);
-        $this->Set_cookie($role->surface, $signed);
-        $this->Set_cookie_session($role->surface . "_", $signed);
-		return new Gerror(303, $this->Uri);
-    }
+		return $fields;
+	}
 
     public function Authenticate(string $login=null, string $password=null): ?Gerror
     {

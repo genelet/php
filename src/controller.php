@@ -48,14 +48,15 @@ $logger->info("tag not found.");
 
         if ($role_name != $this->pubrole) {
 $logger->info("login role.");
-            if (empty($this->roles[$role_name])) {
+			if (empty($this->roles[$role_name])) {
 $logger->info("role not found.");
-                return new Gerror(404);
+                return new Gerror(400);
             }
+            $role_obj = $this->roles[$role_name];
 
             if ($this->Is_logout($comp_name)) {
 $logger->info("logout.");
-                $base = new Base($c, $role_name, $tag_name);
+				$base = new Base($c, $role_name, $tag_name);
 				$logout = $base->Handler_logout();
         		if ($is_json) {
 					header("Content-Type: application/json");
@@ -70,18 +71,30 @@ $logger->info("login using " . $this->provider_name);
                 : isset($_REQUEST[$this->provider_name])
                 ? new Procedure($dbi, null, $c, $role_name, $tag_name, $_REQUEST[$this->provider_name])
                 : new Procedure($dbi, null, $c, $role_name, $tag_name);
-                $err = ($is_json) ? $ticket->Handler_login():$ticket->Handler();
-			    if ($err === null) { return new Gerror(401); }
-                if ($err->error_code == 303) { // success is 303
-$logger->info("login succeeded.");
-					if ($is_json) {
-						header("Content-Type: application/json");
-						return new Gerror(200, json_encode(["success" => true, "error_string" => $tag_obj->logged]));
+				if ($is_json) {
+                	$err = $ticket->Basic();
+					if ($err !== null) {
+						header("Tabilet-Error: " . $err->error_code);
+						header("Tabilet-Error-Description: " . $err->error_string);
+						return new Gerror(400, json_encode(["error"=>$err->error_code, "error_description"=>$err->error_string]));
 					}
-                    return $err;
-                } // all other cases are login page error
-$logger->info("login failed.");
-                return new Gerror(200, $this->login_page($role_name, $tag_name, $err));
+				} else {
+                	$err = $ticket->Handler();
+					if ($err !== null) {
+						return new Gerror(200, $this->login_page($role_name, $tag_name, $err));
+					}
+				}
+$logger->info("login succeeded.");
+				$signed = $ticket->Signature($ticket->Get_fields());
+				if ($ticket->IsBasic()==false) {
+					$ticket->Set_cookie($role_obj->surface, $signed);
+					$ticket->Set_cookie_session($role_obj->surface . "_", $signed);
+				}
+				if ($is_json) {
+					header("Content-Type: application/json");
+					return new Gerror(200, json_encode(["token_type"=>"bearer", "access_token"=>$signed, "expires_in"=>$role_obj->duration]));
+				}
+				return new Gerror(303, $ticket->Uri);
             }
         }
         if (empty($this->components[$comp_name]) ||
@@ -111,7 +124,10 @@ $logger->info("ticket check failed.");
 				$code = $err->error_code;
         		if ($is_json) {
 					header("Content-Type: application/json");
-					return new Gerror(200, json_encode(["success" => false, "error_code" => $err->error_code, "error_string" => $tag_obj->challenge]));
+					header('WWW-Authenticate: Bearer realm="'.$filter->script."/".$filter->Role_name."/".$filter->Tag_name."/".$filter->login_name.'", charset="UTF-8"');
+					header("Tabilet-Error: " . $err->error_code);
+					header("Tabilet-Error-Description: " . $err->error_string);
+					return new Gerror(401, json_encode(["error" => $err->error_code, "error_description" => $err->error_string]));
 				}
 				return new Gerror(303, $filter->Forbid());
 			} else {
@@ -125,7 +141,7 @@ $logger->info("put decoded into the request object.");
 
         if (!$filter->Role_can()) {
 $logger->info("acl failed.");
-            return new Gerror(401);
+            return new Gerror(403);
         }
 
         if ($this->Is_loginas($action)) {
@@ -177,7 +193,8 @@ $logger->info("after completed.");
         if ($err != null) {return new Gerror(200, $this->error_page($tag_name, $err));}
 
 $logger->info("start building content page.");
-		$result = $this->content_page($role_name, $filter->Component, $filter->Action, $tag_name, $OLD, $model->LISTS, $model->OTHER);
+		$result = ($is_json) ? json_encode(["success" => true, "incoming" => $OLD, "data" => $model->LISTS, "included" => $model->OTHER])
+			: $this->content_page($role_name, $filter->Component, $filter->Action, $tag_name, $OLD, $model->LISTS, $model->OTHER);
 		if ($cache_type>0) {
 			$cache->set($url_key, $result);
 		}
@@ -213,10 +230,6 @@ $logger->info("end page, and sending to browser.");
 
     private function content_page(string $role, string $comp, string $action, string $tag, array $old, array $lists, array $other): string
     {
-        if ($this->Is_json_tag($tag)) {
-			header("Content-Type: application/json");
-			return json_encode(["success" => true, "incoming" => $old, "data" => $lists, "included" => $other]);
-		}
         $loader = new \Twig\Loader\FilesystemLoader([$this->template . "/" . $role . "/" . $comp, $this->template . "/" . $role]);
         $twig = new \Twig\Environment($loader);
         return $twig->render($action . "." . $tag, array_merge(array_merge($old, $other), [$action => $lists]));

@@ -78,14 +78,9 @@ final class TicketTest extends TestCase
         $_SERVER["REQUEST_TIME"] = "0";
         $_SERVER["REMOTE_ADDR"] = "192.168.29.30";
         $err = $ticket->Handler();
-        $this->assertIsObject($err);
-        $this->assertEquals(303, $err->error_code);
-        $this->assertEquals($ticket->Uri, $err->error_string);
-
-        $ticket->Tag_name = "e";
-        $err = $ticket->Handler();
-        $this->assertIsObject($err);
-        $this->assertEquals(303, $err->error_code);
-        $this->assertEquals($ticket->Uri, $err->error_string);
+        $this->assertNull($err);
+		$fields = $ticket->Get_fields();
+        $this->assertEquals($fields[0], "hello");
+        $this->assertEquals($fields[1], "db");
     }
 }

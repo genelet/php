@@ -20,6 +20,10 @@ class Base extends Config
         $this->tag_obj = $this->chartags[$cv];
     }
 
+	public function Get_role() {
+		return $this->role_obj;
+	}
+
 	public function Is_admin() : bool {
 		if ($this->Is_public()===true) {return false;}
 		return $this->role_obj->is_admin;

@@ -133,6 +133,13 @@ final class ControllerTest extends TestCase
 		$this->assertIsObject($err);
 		$this->assertEquals(404, $err->error_code);
 
+        $_SERVER["REQUEST_URI"] = "/bb/m/json/t?action=topics";
+		$_REQUEST["action"] = "topics";
+		$err = $controller->Run();
+		$this->assertIsObject($err);
+		$this->assertEquals(401, $err->error_code);
+		$this->assertEquals('{"error":1020,"error_description":"Login required."}', $err->error_string);
+
         $_SERVER["REQUEST_URI"] = "/bb/m/e/t?action=topics";
 		$_REQUEST["action"] = "topics";
 		$err = $controller->Run();
@@ -159,6 +166,39 @@ final class ControllerTest extends TestCase
 		$this->assertEquals(200, $err->error_code);
 		$this->assertEquals("1032:Login failed\n", $err->error_string);
 		
+		$_SERVER["REQUEST_URI"] = "/bb/m/json/login";
+		$_SERVER['PHP_AUTH_USER'] = "1";
+		$_SERVER['PHP_AUTH_PW'] = "aaaJunk";
+		$err = $controller->Run();
+		$this->assertIsObject($err);
+		$this->assertEquals(400, $err->error_code);
+		$this->assertEquals('{"error":1032,"error_description":"Login failed"}', $err->error_string);
+		$_SERVER['PHP_AUTH_PW'] = "aaa";
+		$err = $controller->Run();
+		$this->assertIsObject($err);
+		$this->assertTrue(empty($_COOKIE["SET_COOKIE"]["mc"]));
+		$this->assertEquals(200, $err->error_code);
+		//$this->assertEquals('{"token_type":"bearer","access_token":"9uNG7G11p5_Poz0Lou23bOHnAtpditPH6UaCsI1lRmwaaiYBrWmkVEuSsDh3cZ3banilWdb5n34k9TPV9kJ3DXurZtquYUAUrtDyWtvgsmmgz6JD5Q9P_7C1VBQEJEyNmXALstsPdk-sC9_Q-BBn9WFP_MNKMRTrwWX9ZrBoL00","expires_in":360000}', $err->error_string);
+		unset($_COOKIE["SET_COOKIE"]);
+
+		$_SERVER["REQUEST_URI"] = "/bb/m/json/login";
+		unset($_SERVER['PHP_AUTH_USER']);
+		unset($_SERVER['PHP_AUTH_PW']);
+		$_REQUEST["email"] = "1";
+		$_REQUEST["passwd"] = "aaaJunk";
+		$err = $controller->Run();
+		$this->assertIsObject($err);
+		$this->assertEquals(400, $err->error_code);
+		$this->assertEquals('{"error":1032,"error_description":"Login failed"}', $err->error_string);
+		$_REQUEST["passwd"] = "aaa";
+		$err = $controller->Run();
+		$this->assertIsObject($err);
+		$this->assertTrue(isset($_COOKIE["SET_COOKIE"]["mc"]));
+		$this->assertEquals(200, $err->error_code);
+		//$this->assertEquals('{"token_type":"bearer","access_token":"9uNG7G11p5_Poz0Lou23bOHnAtpditPH6UaCsI1lRmwaaiYBrWmkVEuSsDh3cZ3banilWdb5n34k9TPV9kJ3DXurZtquYUAUrtDyWtvgsmmgz6JD5Q9P_7C1VBQEJEyNmXALstsPdk-sC9_Q-BBn9WFP_MNKMRTrwWX9ZrBoL00","expires_in":360000}', $err->error_string);
+		unset($_COOKIE["SET_COOKIE"]);
+
+		$_SERVER["REQUEST_URI"] = "/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Ft%3Faction%3Dtopics&go_err=1025&provider=db";
 		$_REQUEST["email"] = "1";
 		$_REQUEST["passwd"] = "aaa";
 		$err = $controller->Run();

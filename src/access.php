@@ -108,10 +108,25 @@ class Access extends Base
         $role = $this->role_obj;
         $raw = "";
         if (empty($raws)) {
-            if (empty($_COOKIE[$role->surface])) {
+			$header = null;
+			if (isset($_SERVER['Authorization'])) {
+				$header = trim($_SERVER["Authorization"]);
+			} else if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+				$header = trim($_SERVER["HTTP_AUTHORIZATION"]);
+			} elseif (function_exists('apache_request_headers')) {
+				$requestHeaders = apache_request_headers();
+				$requestHeaders = array_combine(array_map('ucwords', array_keys($requestHeaders)), array_values($requestHeaders));
+				if (isset($requestHeaders['Authorization'])) {
+					$headers = trim($requestHeaders['Authorization']);
+				}
+			}
+			if ($header != null && substr($header, 0, 7) == 'Bearer ') {
+				$raw = substr($header, 7);
+			} else if (!empty($_COOKIE[$role->surface])) {
+            	$raw = $_COOKIE[$role->surface];
+			} else {
                 return new Gerror(1020);
             }
-            $raw = $_COOKIE[$role->surface];
         } else {
             $raw = $raws[0];
         }
