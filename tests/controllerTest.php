@@ -2,6 +2,8 @@
 declare (strict_types = 1);
 namespace Genelet\Tests;
 
+use Twig;
+
 use PHPUnit\Framework\TestCase;
 use Genelet\Controller;
 use Genelet\Logger;
@@ -12,6 +14,17 @@ class tFilter extends Filter {};
 
 final class ControllerTest extends TestCase
 {
+	private function getRender($resp, $c): ?Array {
+		if ($resp->is_json==false && $resp->code==200) {
+			$loader = ($resp->page_type=="error" || $resp->page_type=="login") ?
+new \Twig\Loader\FilesystemLoader( $c->{"Template"}."/".$resp->role) :
+new \Twig\Loader\FilesystemLoader([$c->{"Template"}."/".$resp->role, $c->{"Template"}."/".$resp->role ."/". $resp->component]);
+			$twig = new \Twig\Environment($loader);
+			return Array($twig, "render");
+		}
+		return null;
+	}
+
     private function init2(): object
     {
         $str = '{
@@ -134,7 +147,7 @@ final class ControllerTest extends TestCase
 		$_REQUEST["action"] = "topics";
 		$resp = $controller->Run();
 		$this->assertEquals(401, $resp->code);
-		$this->assertEquals('{"success":false,"error_code":1020,"error_string":"Login required."}', $resp->report($controller->template));
+		$this->assertEquals('{"success":false,"error_code":1020,"error_string":"Login required."}', $resp->report(self::getRender($resp, $c)));
 
         $_SERVER["REQUEST_URI"] = "/bb/m/e/t?action=topics";
 		$_REQUEST["action"] = "topics";
@@ -145,25 +158,25 @@ final class ControllerTest extends TestCase
 		$_SERVER["REQUEST_URI"] = "/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Ft%3Faction%3Dtopics&go_err=1025&provider=db";
 		$resp = $controller->Run();
 		$this->assertEquals(200, $resp->code);
-		$this->assertEquals("1036:Please make sure your browser supports cookie.\n", $resp->report($controller->template));
+		$this->assertEquals("1036:Please make sure your browser supports cookie.\n", $resp->report(self::getRender($resp, $c)));
 		
 		$_COOKIE["go_probe"] = "1";
 		$resp = $controller->Run();
 		$this->assertEquals(200, $resp->code);
-		$this->assertEquals("1026:Missing login or password\n", $resp->report($controller->template));
+		$this->assertEquals("1026:Missing login or password\n", $resp->report(self::getRender($resp, $c)));
 		
 		$_REQUEST["email"] = "1";
 		$_REQUEST["passwd"] = "aaaJunk";
 		$resp = $controller->Run();
 		$this->assertEquals(200, $resp->code);
-		$this->assertEquals("1032:Login failed\n", $resp->report($controller->template));
+		$this->assertEquals("1032:Login failed\n", $resp->report(self::getRender($resp, $c)));
 		
 		$_SERVER["REQUEST_URI"] = "/bb/m/json/login";
 		$_SERVER['PHP_AUTH_USER'] = "1";
 		$_SERVER['PHP_AUTH_PW'] = "aaaJunk";
 		$resp = $controller->Run();
 		$this->assertEquals(400, $resp->code);
-		$this->assertEquals('{"success":false,"error_code":1032,"error_string":"Login failed"}', $resp->report($controller->template));
+		$this->assertEquals('{"success":false,"error_code":1032,"error_string":"Login failed"}', $resp->report(self::getRender($resp, $c)));
 		$_SERVER['PHP_AUTH_PW'] = "aaa";
 		$resp = $controller->Run();
 		$this->assertTrue(empty($_COOKIE["SET_COOKIE"]["mc"]));
@@ -178,7 +191,7 @@ final class ControllerTest extends TestCase
 		$_REQUEST["passwd"] = "aaaJunk";
 		$resp = $controller->Run();
 		$this->assertEquals(400, $resp->code);
-		$this->assertEquals('{"success":false,"error_code":1032,"error_string":"Login failed"}', $resp->report($controller->template));
+		$this->assertEquals('{"success":false,"error_code":1032,"error_string":"Login failed"}', $resp->report(self::getRender($resp, $c)));
 		$_REQUEST["passwd"] = "aaa";
 		$resp = $controller->Run();
 		$this->assertTrue(isset($_COOKIE["SET_COOKIE"]["mc"]));
@@ -205,7 +218,7 @@ final class ControllerTest extends TestCase
 		$_REQUEST["action"] = "edit";
         $resp = $controller->Run();
 		$this->assertEquals(200, $resp->code);
-		$this->assertEquals("1035:id\n", $resp->report($controller->template));
+		$this->assertEquals("1035:id\n", $resp->report(self::getRender($resp, $c)));
 
 		foreach (["email","m_id","first_name","last_name","address","company"] as $var) {
 			unset($_REQUEST[$var]);
@@ -214,7 +227,7 @@ final class ControllerTest extends TestCase
 		$_SERVER["REQUEST_URI"] = "/bb/m/json/t?action=edit";
         $resp = $controller->Run();
 		$this->assertEquals(200, $resp->code);
-		$this->assertEquals('{"success":true,"incoming":{"action":"edit","id":4},"data":[{"x":"ddd","y":"www","z":"1","id":"4","id_md5":"WBDuVepn54OOmgFH5TllK3ccX0Euok_SBby2pJEBjqc"}],"included":{"csrf_token":"AAAAAE_CbxN0zA2c7g-Jw_sYoPJLwhnhRNYtBgUc0tHtV9rn","cache_url":"\/bb\/m\/t\/4.json","json_url":"\/bb\/m\/json\/t?action=edit"}}', $resp->report($controller->template));
+		$this->assertEquals('{"success":true,"incoming":{"action":"edit","id":4},"data":[{"x":"ddd","y":"www","z":"1","id":"4","id_md5":"WBDuVepn54OOmgFH5TllK3ccX0Euok_SBby2pJEBjqc"}],"included":{"csrf_token":"AAAAAE_CbxN0zA2c7g-Jw_sYoPJLwhnhRNYtBgUc0tHtV9rn","cache_url":"\/bb\/m\/t\/4.json","json_url":"\/bb\/m\/json\/t?action=edit"}}', $resp->report(self::getRender($resp, $c)));
 
 		$_SERVER["REQUEST_URI"] = "/bb/m/json/t?action=topics";
 		foreach (["email","m_id","first_name","last_name","address","company"] as $var) {
@@ -225,7 +238,7 @@ final class ControllerTest extends TestCase
 		$controller = new Controller($c, $pdo, ["t"=>self::init2(),self::init3()], $storage, $logger);
         $resp = $controller->Run();
 		$this->assertEquals(200, $resp->code);
-		$this->assertEquals('{"success":true,"incoming":{"action":"topics"},"data":[{"id":"1","x":"aaa","y":"zzz","z":"1","a":"11","tf_topics":[{"id":"1","a":"11","fid":"1"},{"id":"1","a":"111","fid":"2"}],"id_md5":"NqbjaOTdKgeU-u1En0zf9uIOOsOGBWOr9I5fasQ-YxM"},{"id":"1","x":"aaa","y":"zzz","z":"1","a":"111","tf_topics":[{"id":"1","a":"11","fid":"1"},{"id":"1","a":"111","fid":"2"}],"id_md5":"NqbjaOTdKgeU-u1En0zf9uIOOsOGBWOr9I5fasQ-YxM"},{"id":"2","x":"bbb","y":"yyy","z":"1","a":"22","tf_topics":[{"id":"2","a":"22","fid":"3"},{"id":"2","a":"222","fid":"4"}],"id_md5":"L9-9OwSaFmPnoCPNKpYF1M2gOAYpTN3PKsESn9EfdWs"},{"id":"2","x":"bbb","y":"yyy","z":"1","a":"222","tf_topics":[{"id":"2","a":"22","fid":"3"},{"id":"2","a":"222","fid":"4"}],"id_md5":"L9-9OwSaFmPnoCPNKpYF1M2gOAYpTN3PKsESn9EfdWs"},{"id":"3","x":"ccc","y":"xxx","z":"1","a":"33","tf_topics":[{"id":"3","a":"33","fid":"5"},{"id":"3","a":"333","fid":"6"}],"id_md5":"XGz0HstPHvpOD2tmf9jz3CsvnTUiOB-KW9IVX5KJ630"},{"id":"3","x":"ccc","y":"xxx","z":"1","a":"333","tf_topics":[{"id":"3","a":"33","fid":"5"},{"id":"3","a":"333","fid":"6"}],"id_md5":"XGz0HstPHvpOD2tmf9jz3CsvnTUiOB-KW9IVX5KJ630"},{"id":"4","x":"ddd","y":"www","z":"1","a":"444","tf_topics":[{"id":"4","a":"444","fid":"7"}],"id_md5":"WBDuVepn54OOmgFH5TllK3ccX0Euok_SBby2pJEBjqc"},{"id":"5","x":"eee","y":"vvv","z":"1","a":"555","tf_topics":[{"id":"5","a":"555","fid":"8"}],"id_md5":"Gv6nPAvRmIrGVwZiqF0K84XjlP-v4g8S5Y42B9rpF5c"}],"included":{"csrf_token":"AAAAAE_CbxN0zA2c7g-Jw_sYoPJLwhnhRNYtBgUc0tHtV9rn","cache_url":"\/bb\/m\/t\/topics.json","json_url":"\/bb\/m\/json\/t?action=topics"}}', $resp->report($controller->template));
+		$this->assertEquals('{"success":true,"incoming":{"action":"topics"},"data":[{"id":"1","x":"aaa","y":"zzz","z":"1","a":"11","tf_topics":[{"id":"1","a":"11","fid":"1"},{"id":"1","a":"111","fid":"2"}],"id_md5":"NqbjaOTdKgeU-u1En0zf9uIOOsOGBWOr9I5fasQ-YxM"},{"id":"1","x":"aaa","y":"zzz","z":"1","a":"111","tf_topics":[{"id":"1","a":"11","fid":"1"},{"id":"1","a":"111","fid":"2"}],"id_md5":"NqbjaOTdKgeU-u1En0zf9uIOOsOGBWOr9I5fasQ-YxM"},{"id":"2","x":"bbb","y":"yyy","z":"1","a":"22","tf_topics":[{"id":"2","a":"22","fid":"3"},{"id":"2","a":"222","fid":"4"}],"id_md5":"L9-9OwSaFmPnoCPNKpYF1M2gOAYpTN3PKsESn9EfdWs"},{"id":"2","x":"bbb","y":"yyy","z":"1","a":"222","tf_topics":[{"id":"2","a":"22","fid":"3"},{"id":"2","a":"222","fid":"4"}],"id_md5":"L9-9OwSaFmPnoCPNKpYF1M2gOAYpTN3PKsESn9EfdWs"},{"id":"3","x":"ccc","y":"xxx","z":"1","a":"33","tf_topics":[{"id":"3","a":"33","fid":"5"},{"id":"3","a":"333","fid":"6"}],"id_md5":"XGz0HstPHvpOD2tmf9jz3CsvnTUiOB-KW9IVX5KJ630"},{"id":"3","x":"ccc","y":"xxx","z":"1","a":"333","tf_topics":[{"id":"3","a":"33","fid":"5"},{"id":"3","a":"333","fid":"6"}],"id_md5":"XGz0HstPHvpOD2tmf9jz3CsvnTUiOB-KW9IVX5KJ630"},{"id":"4","x":"ddd","y":"www","z":"1","a":"444","tf_topics":[{"id":"4","a":"444","fid":"7"}],"id_md5":"WBDuVepn54OOmgFH5TllK3ccX0Euok_SBby2pJEBjqc"},{"id":"5","x":"eee","y":"vvv","z":"1","a":"555","tf_topics":[{"id":"5","a":"555","fid":"8"}],"id_md5":"Gv6nPAvRmIrGVwZiqF0K84XjlP-v4g8S5Y42B9rpF5c"}],"included":{"csrf_token":"AAAAAE_CbxN0zA2c7g-Jw_sYoPJLwhnhRNYtBgUc0tHtV9rn","cache_url":"\/bb\/m\/t\/topics.json","json_url":"\/bb\/m\/json\/t?action=topics"}}', $resp->report(self::getRender($resp, $c)));
 
 		$_SERVER["REQUEST_URI"] = "/bb/m/e/t?action=topics";
 		foreach (["email","m_id","first_name","last_name","address","company"] as $var) {
@@ -236,6 +249,6 @@ final class ControllerTest extends TestCase
 		$controller = new Controller($c, $pdo, ["t"=>self::init2(),self::init3()], $storage, $logger);
         $resp = $controller->Run();
 		$this->assertEquals(200, $resp->code);
-		$this->assertEquals('id=1,id=1,id=2,id=2,id=3,id=3,id=4,id=5,', $resp->report($controller->template));
+		$this->assertEquals('id=1,id=1,id=2,id=2,id=3,id=3,id=4,id=5,', $resp->report(self::getRender($resp, $c)));
 	}
 }

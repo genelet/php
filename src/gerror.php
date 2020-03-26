@@ -14,14 +14,6 @@ class Gerror
         $this->error_string = empty($msg) ? $this->get_string() : $msg;
     }
 
-	public function http_status() : int {
-		return $this->error_code;
-	}
-
-	public function http_report() : string {
-		return $this->error_string;
-	}
-
     public function get_string(): string
     {
 		if (!empty($this->error_string)) { return $this->error_string;}

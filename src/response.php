@@ -2,7 +2,6 @@
 declare (strict_types = 1);
 
 namespace Genelet;
-use Twig;
 
 class Response
 {
@@ -67,7 +66,7 @@ class Response
 		return $this;
 	}
 
-	public function report(string $template) : ?string {
+	public function report($render=null) : ?string {
 		http_response_code($this->code);
 		switch ($this->code) {
 		case 400:
@@ -86,13 +85,9 @@ class Response
 			} elseif ($this->page_type=="error" || $this->page_type=="login") {
 				header("Pragma: no-cache");
 				header("Cache-Control: no-cache, no-store, max-age=0, must-revalidate");
-				$loader = new \Twig\Loader\FilesystemLoader($template ."/". $this->role);
-        		$twig = new \Twig\Environment($loader);
-				return $twig->render($this->page_type.".".$this->tag, array_merge($_REQUEST, $this->results));
+				return $render($this->page_type.".".$this->tag, array_merge($_REQUEST, $this->results));
 			} else {
-        		$loader = new \Twig\Loader\FilesystemLoader([$template ."/". $this->role ."/". $this->component, $template ."/". $this->role]);
-				$twig = new \Twig\Environment($loader);
-				return $twig->render($this->action.".".$this->tag, array_merge(array_merge($this->results["incoming"], $this->results["included"]), [$this->action => $this->results["data"]]));
+				return $render($this->action.".".$this->tag, array_merge(array_merge($this->results["incoming"], $this->results["included"]), [$this->action => $this->results["data"]]));
 			}
 			break;
 		default:
