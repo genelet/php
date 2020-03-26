@@ -18,11 +18,11 @@ class Controller extends Config
         $this->logger = $log;
     }
 
-    public function Run(): ?Gerror
+    public function Run(): Response
     {
         // self::cross_domain();
         if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
-            return newe Response(200);
+            return new Response(200);
         }
 		$logger = $this->logger;
 $logger->screen_start($_SERVER["REQUEST_METHOD"], $_SERVER["REQUEST_URI"], $_SERVER["REMOTE_ADDR"], $_SERVER['HTTP_USER_AGENT']);
@@ -43,7 +43,7 @@ $logger->info("tag not found.");
         }
 		$tag_obj = $this->chartags[$tag_name];
 		$is_json = $this->Is_json_tag($tag_name);
-		$resposne = new Response(200, $role_name, $tag_name, $is_json, $comp_name, $action, $cache_type, $url_key);
+		$response = new Response(200, $role_name, $tag_name, $is_json, $comp_name, $action, $url_key);
 		$c = $this->original;
 
         if ($role_name != $this->pubrole) {
@@ -59,9 +59,9 @@ $logger->info("logout.");
 				$base = new Base($c, $role_name, $tag_name);
 				$logout = $base->Handler_logout();
         		if ($is_json) {
-					return response->with_results(["success" => true]);
+					return $response->with_results(["success" => true]);
 				}
-                return response->with_redirect($logout);
+                return $response->with_redirect($logout);
             } elseif ($this->Is_login($comp_name) || $this->Is_oauth2($comp_name)) {
 $logger->info("login using " . $this->provider_name);
                 $dbi = new Dbi($this->pdo);
@@ -73,7 +73,8 @@ $logger->info("login using " . $this->provider_name);
 				if ($is_json) {
                 	$err = $ticket->Basic();
 					if ($err !== null) {
-						$response->headers = ["Tabilet-Error" => $err->error_code, "Tabilet-Error-Description" => $err->error_string];
+						header("Tabilet-Error: ". $err->error_code);
+						header("Tabilet-Error-Description: ".$err->error_string);
 						$response->code = 400;
 						return $response->with_error($err);
 					}
@@ -119,14 +120,12 @@ $logger->info("check authentication for not public role.");
             $err = empty($_REQUEST[$surface]) ? $filter->Verify_cookie() : $filter->Verify_cookie($_REQUEST[$surface]);
             if ($err != null) {
 $logger->info("ticket check failed.");
-				$code = $err->error_code;
         		if ($is_json) {
-					$response->headers = [
-	"Content-Type": "application/json",
-	"WWW-Authenticate": 'Bearer realm="'.$filter->script."/".$filter->Role_name."/".$filter->Tag_name."/".$filter->login_name.'", charset="UTF-8"',
-	"Tabilet-Error": $err->error_code,
-	"Tabilet-Error-Description": $err->error_string];
-					$response->code(401);
+	header("Content-Type: application/json");
+	header('WWW-Authenticate: Bearer realm="'.$filter->script."/".$filter->Role_name."/".$filter->Tag_name."/".$filter->login_name.'", charset="UTF-8"');
+	header("Tabilet-Error: ". $err->error_code);
+	header("Tabilet-Error-Description: ". $err->error_string);
+					$response->code = 401;
 					return $response->with_error($err);
 				}
 				return $response->with_redirect($filter->Forbid());
@@ -197,7 +196,7 @@ $logger->info("after completed.");
 		}
 
 $logger->info("end page, and sending to browser.");
-		return $response->with_result(["success" => true, "incoming" => $OLD, "data" => $model->LISTS, "included" => $model->OTHER]);
+		return $response->with_results(["success" => true, "incoming" => $OLD, "data" => $model->LISTS, "included" => $model->OTHER]);
     }
 
     private static function cross_domain() : void
