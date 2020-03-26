@@ -2,7 +2,6 @@
 declare (strict_types = 1);
 
 namespace Genelet;
-use Twig;
 
 class Controller extends Config
 {
@@ -23,13 +22,13 @@ class Controller extends Config
     {
         // self::cross_domain();
         if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
-            return new Gerror(200);
+            return newe Response(200);
         }
 		$logger = $this->logger;
 $logger->screen_start($_SERVER["REQUEST_METHOD"], $_SERVER["REQUEST_URI"], $_SERVER["REMOTE_ADDR"], $_SERVER['HTTP_USER_AGENT']);
         if (empty($this->default_actions[$_SERVER["REQUEST_METHOD"]])) {
 $logger->info("request method not defined.");
-            return new Gerror(405);
+            return new Response(405);
         }
 		
         list ($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, $err) = $this->getUrl();
@@ -40,17 +39,18 @@ $logger->info("comp=>" . $comp_name);
 $logger->info("action=>" . $action);
         if (empty($this->chartags[$tag_name])) {
 $logger->info("tag not found.");
-            return new Gerror(404);
+            return new Response(404);
         }
 		$tag_obj = $this->chartags[$tag_name];
 		$is_json = $this->Is_json_tag($tag_name);
+		$resposne = new Response(200, $role_name, $tag_name, $is_json, $comp_name, $action, $cache_type, $url_key);
 		$c = $this->original;
 
         if ($role_name != $this->pubrole) {
 $logger->info("login role.");
 			if (empty($this->roles[$role_name])) {
 $logger->info("role not found.");
-                return new Gerror(400);
+                return new Response(404);
             }
             $role_obj = $this->roles[$role_name];
 
@@ -59,10 +59,9 @@ $logger->info("logout.");
 				$base = new Base($c, $role_name, $tag_name);
 				$logout = $base->Handler_logout();
         		if ($is_json) {
-					header("Content-Type: application/json");
-					return new Gerror(200, json_encode(["success" => true, "error_string" => $tag_obj->logout]));
+					return response->with_results(["success" => true]);
 				}
-                return new Gerror(303, $logout);
+                return response->with_redirect($logout);
             } elseif ($this->Is_login($comp_name) || $this->Is_oauth2($comp_name)) {
 $logger->info("login using " . $this->provider_name);
                 $dbi = new Dbi($this->pdo);
@@ -74,14 +73,14 @@ $logger->info("login using " . $this->provider_name);
 				if ($is_json) {
                 	$err = $ticket->Basic();
 					if ($err !== null) {
-						header("Tabilet-Error: " . $err->error_code);
-						header("Tabilet-Error-Description: " . $err->error_string);
-						return new Gerror(400, json_encode(["error"=>$err->error_code, "error_description"=>$err->error_string]));
+						$response->headers = ["Tabilet-Error" => $err->error_code, "Tabilet-Error-Description" => $err->error_string];
+						$response->code = 400;
+						return $response->with_error($err);
 					}
 				} else {
                 	$err = $ticket->Handler();
 					if ($err !== null) {
-						return new Gerror(200, $this->login_page($role_name, $tag_name, $err));
+						return $response->with_login($err);
 					}
 				}
 $logger->info("login succeeded.");
@@ -91,17 +90,16 @@ $logger->info("login succeeded.");
 					$ticket->Set_cookie_session($role_obj->surface . "_", $signed);
 				}
 				if ($is_json) {
-					header("Content-Type: application/json");
-					return new Gerror(200, json_encode(["token_type"=>"bearer", "access_token"=>$signed, "expires_in"=>$role_obj->duration]));
+					return $response->with_results(["token_type"=>"bearer", "access_token"=>$signed, "expires_in"=>$role_obj->duration]);
 				}
-				return new Gerror(303, $ticket->Uri);
+				return $response->with_redirect($ticket->Uri);
             }
         }
         if (empty($this->components[$comp_name]) ||
             empty($this->components[$comp_name]->{"actions"}) ||
             empty($this->components[$comp_name]->{"actions"}->{$action})) {
 $logger->info("component or action not found.");
-            return new Gerror(404);
+            return new Response(404);
         }
 
         $filter_name = ($this->project == "Genelet")
@@ -123,13 +121,15 @@ $logger->info("check authentication for not public role.");
 $logger->info("ticket check failed.");
 				$code = $err->error_code;
         		if ($is_json) {
-					header("Content-Type: application/json");
-					header('WWW-Authenticate: Bearer realm="'.$filter->script."/".$filter->Role_name."/".$filter->Tag_name."/".$filter->login_name.'", charset="UTF-8"');
-					header("Tabilet-Error: " . $err->error_code);
-					header("Tabilet-Error-Description: " . $err->error_string);
-					return new Gerror(401, json_encode(["error" => $err->error_code, "error_description" => $err->error_string]));
+					$response->headers = [
+	"Content-Type": "application/json",
+	"WWW-Authenticate": 'Bearer realm="'.$filter->script."/".$filter->Role_name."/".$filter->Tag_name."/".$filter->login_name.'", charset="UTF-8"',
+	"Tabilet-Error": $err->error_code,
+	"Tabilet-Error-Description": $err->error_string];
+					$response->code(401);
+					return $response->with_error($err);
 				}
-				return new Gerror(303, $filter->Forbid());
+				return $response->with_redirect($filter->Forbid());
 			} else {
 $logger->info("ticket check successful.");
             	foreach ($filter->Decoded as $k => $v) {
@@ -141,20 +141,20 @@ $logger->info("put decoded into the request object.");
 
         if (!$filter->Role_can()) {
 $logger->info("acl failed.");
-            return new Gerror(403);
+            return new Response(403);
         }
 
-        if ($this->Is_loginas($action)) {
-$logger->info("login as ...");
-            return $filter->Login_as();
-        }
+//        if ($this->Is_loginas($action)) {
+//$logger->info("login as ...");
+//            return $filter->Login_as();
+//        }
 
 		$ttl = isset($filter->actionHash["ttl"]) ? $filter->actionHash["ttl"] : $this->ttl;
 		$cache = new Cache($c, $role_name, $tag_name, $action, $comp_name, $cache_type, $ttl);
 		if ($cache_type>0) {
 $logger->info("caching starts...");
 			if ($cache->has($url_key)) {
-				return new Gerror(200, $cache->get($url_key));
+				return $response->with_cached($cache->get($url_key));
 			 } elseif ($cache_type===1) { // GET id request
 				$_REQUEST[$filter->current_key] = $url_key;
 			 } elseif ($cache_type===2 && !empty($url_key)) {
@@ -165,7 +165,7 @@ $logger->info("caching starts...");
 
         $err = $filter->Preset();
 $logger->info("preset completed.");
-        if ($err != null) {return new Gerror(200, $this->error_page($tag_name, $err));}
+        if ($err != null) {return $response->with_error($err);}
 
         $model = $this->Storage[$comp_name];
         $lists = array();
@@ -179,60 +179,25 @@ $logger->info("preset completed.");
         $nextextra = array();
         $err = $filter->Before($model, $extra, $nextextra);
 $logger->info("before completed.");
-        if ($err != null) {return new Gerror(200, $this->error_page($tag_name, $err));}
+        if ($err != null) {return $response->with_error($err);}
 
         if (empty($filter->actionHash["options"]) || array_search("no_method", $filter->actionHash["options"]) === false) {
             $action = $filter->Action;
 $logger->info("start model action: " . $action);
             $err = $model->$action($extra, ...$nextextra);
-            if ($err != null) {return new Gerror(200, $this->error_page($tag_name, $err));}
+        	if ($err != null) {return $response->with_error($err);}
         }
 
         $err = $filter->After($model);
 $logger->info("after completed.");
-        if ($err != null) {return new Gerror(200, $this->error_page($tag_name, $err));}
+        if ($err != null) {return $response->with_error($err);}
 
-$logger->info("start building content page.");
-		$result = ($is_json) ? json_encode(["success" => true, "incoming" => $OLD, "data" => $model->LISTS, "included" => $model->OTHER])
-			: $this->content_page($role_name, $filter->Component, $filter->Action, $tag_name, $OLD, $model->LISTS, $model->OTHER);
 		if ($cache_type>0) {
-			$cache->set($url_key, $result);
+			$response->cache = $cache;
 		}
+
 $logger->info("end page, and sending to browser.");
-		return new Gerror(200, $result);
-    }
-
-    private function error_page(string $tag_name, Gerror $err): string
-    {
-        header("Pragma: no-cache");
-        header("Cache-Control: no-cache, no-store, max-age=0, must-revalidate");
-        if ($this->Is_json_tag($tag_name)) {
-			header("Content-Type: application/json");
-            return json_encode(["success" => false, "error_code" => $err->error_code, "error_string" => $err->error_string]);
-        }
-        $loader = new \Twig\Loader\FilesystemLoader($this->template);
-        $twig = new \Twig\Environment($loader);
-        return $twig->render("error." . $tag_name, ["error_code" => $err->error_code, "error_string" => $err->error_string]);
-    }
-
-    private function login_page(string $role_name, string $tag_name, Gerror $err): string
-    {
-        header("Pragma: no-cache");
-        header("Cache-Control: no-cache, no-store, max-age=0, must-revalidate");
-        if ($this->Is_json_tag($tag_name)) {
-			header("Content-Type: application/json");
-            return json_encode(["success" => false, "error_code" => $err->error_code, "error_string" => $err->error_string]);
-        }
-        $loader = new \Twig\Loader\FilesystemLoader($this->template . "/" . $role_name);
-        $twig = new \Twig\Environment($loader);
-        return $twig->render($this->login_name . "." . $tag_name, array_merge($_REQUEST, ["error_code" => $err->error_code, "error_string" => $err->error_string]));
-    }
-
-    private function content_page(string $role, string $comp, string $action, string $tag, array $old, array $lists, array $other): string
-    {
-        $loader = new \Twig\Loader\FilesystemLoader([$this->template . "/" . $role . "/" . $comp, $this->template . "/" . $role]);
-        $twig = new \Twig\Environment($loader);
-        return $twig->render($action . "." . $tag, array_merge(array_merge($old, $other), [$action => $lists]));
+		return $response->with_result(["success" => true, "incoming" => $OLD, "data" => $model->LISTS, "included" => $model->OTHER]);
     }
 
     private static function cross_domain() : void
