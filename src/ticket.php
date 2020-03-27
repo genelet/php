@@ -110,11 +110,15 @@ class Ticket extends Access
 		return null;
 	}
 
-	public function Get_fields() : array
+	public function Get_fields(Array $hash=null) : array
 	{
         $fields = array();
         foreach ($this->role_obj->attributes as $i => $v) {
-            $fields[$i] = $this->Out_hash[$v];
+			if (!empty($hash) && isset($hash[$v])) {
+            	$fields[$i] = $this->hash[$v];
+			} else {
+            	$fields[$i] = $this->Out_hash[$v];
+			}
         }
 
 		return $fields;

@@ -179,27 +179,4 @@ class Filter extends Access
 		}
 		return null;
 	}
-
-    public function Login_as() : ?Gerror {
-        $ARGS = $this->ARGS;
-        if (empty($ARGS[$this->roleas_name]) || empty($ARGS[$this->roleas_md5]) || empty($ARGS[$this->provider_name]) || empty($ARGS[$this->roleas_uri])) {
-            return new Gerror(3332, "missing one of values: " . implode(", ", array($this->roleas_name, $this->roleas_md5, $this->roleas_uri, $this->provider_name)));
-        }
-		$ticket = new Procedure(new Dbi(new \PDO(...$this->db)), $ARGS[$this->roleas_uri], $this->original, $ARGS[$this->roleas_name], $this->Tag_name, $ARGS[$this->provider_name]);
-        if ($ticket->Is_admin()) {
-            return new Gerror(403);
-        }
-        $tmp_login = $ticket->Get_issuer()->credential[0];
-        if (empty($ARGS[$tmp_login])) {
-            return new Gerror(3333, "missing: ".$tmp_login);
-        }
-		$tmp_value = $ARGS[$tmp_login];
-        if ($ARGS[$c->roleas_md5] !== $this->DigestWithinLogin($ticket->Role_name.$tmp_login.$tmp_value)) {
-            return new Gerror(3334);
-        }
-        $err = $ticket->Authenticate_as($tmp_value);
-        if ($err !== null) { return $err;}
-        return $ticket->Handler_fields();
-    }
-
 }

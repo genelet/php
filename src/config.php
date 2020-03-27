@@ -160,9 +160,6 @@ class Config
 	protected $cache_url_name;
 	protected $json_url_name;
 	protected $loginas_name;
-	protected $roleas_name;
-	protected $roleas_md5;
-	protected $roleas_uri;
 
 	public function __construct(object $c) {
 		$this->original = $c;
@@ -231,9 +228,6 @@ class Config
 		$this->cache_url_name = isset($c->{"CacheURL_name"}) ? $c->{"CacheURL_name"} : "cache_url";
 		$this->json_url_name = isset($c->{"JsonURL_name"}) ? $c->{"JsonURL_name"} : "json_url";
 		$this->loginas_name = isset($c->{"Loginas_name"}) ? $c->{"Loginas_name"} : "loginas";
-		$this->roleas_name = isset($c->{"Roleas_name"}) ? $c->{"Roleas_name"} : "roleas";
-		$this->roleas_md5 = isset($c->{"Roleas_md5"}) ? $c->{"Roleas_md5"} : "rolemd5";
-		$this->roleas_uri = isset($c->{"Roleas_uri"}) ? $c->{"Roleas_uri"} : "roleuri";
     }
 	protected function Is_oauth2(string $name) : bool {
 		return array_search($name, $this->oauth2s) !== false;

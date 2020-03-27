@@ -44,6 +44,25 @@ class Procedure extends Ticket
         return $this->Run_sql($issuer->sql_as, $login);
     }
 
+    public function Handler_as(string $login): ?Gerror
+    {
+        $issuer = $this->Get_issuer();
+        $cred = $issuer->credential;
+        if ($ticket->Is_admin()) {
+            return new Gerror(1038);
+        }
+        $err = $this->Authenticate_as($login);
+		if ($err != null) {
+			return $err;
+		}
+		$attrs = $this->role_obj->attributes;
+		if (empty($this->Out_hash[$attrs[0]])) {
+			return new Gerror(1032);
+		}
+
+        return null;
+    }
+
     public function Callback_address(): string
     {
         $http = "http";

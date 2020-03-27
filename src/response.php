@@ -21,19 +21,19 @@ class Response
 	
     public function __construct(int $code, string $role=null, string $tag=null, bool $is_json=null, string $component=null, string $action=null, string $url_key=null)
     {
-        $this->code      = $code;
+        $this->code = $code;
 		if ($role !== null) {
-        $this->role      = $role;
-        $this->tag       = $tag;
-        $this->is_json   = $is_json;
-        $this->component = $component;
-        $this->action    = $action;
-        $this->url_key   = $url_key;
+        	$this->role      = $role;
+        	$this->tag       = $tag;
+        	$this->is_json   = $is_json;
+        	$this->component = $component;
+        	$this->action    = $action;
+        	$this->url_key   = $url_key;
 		}
 
         $this->page_type = "normal";
         $this->cache     = null;
-        $this->cached    = "";
+        $this->cached    = false;
 
         $this->results   = [];
     }
@@ -44,7 +44,7 @@ class Response
 	}
 
 	public function with_cached(string $body) : Response {
-		$this->cached = $body;
+		$this->cached = true;
 		return $this;
 	}
 
@@ -81,13 +81,22 @@ class Response
 		case 200:
 			if ($this->is_json) {
 				header("Content-Type: application/json");
-				return json_encode($this->results);
-			} elseif ($this->page_type=="error" || $this->page_type=="login") {
+			}
+			if ($this->page_type=="error" || $this->page_type=="login") {
 				header("Pragma: no-cache");
 				header("Cache-Control: no-cache, no-store, max-age=0, must-revalidate");
-				return $render($this->page_type.".".$this->tag, array_merge($_REQUEST, $this->results));
+				return ($this->is_json) ? json_encode($this->results) :
+					$render($this->page_type.".".$this->tag, array_merge($_REQUEST, $this->results));
 			} else {
-				return $render($this->action.".".$this->tag, array_merge(array_merge($this->results["incoming"], $this->results["included"]), [$this->action => $this->results["data"]]));
+				if ($this->cached) {
+					return $this->cache->get($this->url_key);
+				}
+				$str = ($this->is_json) ? json_encode($this->results) :
+					$render($this->action.".".$this->tag, array_merge(array_merge($this->results["incoming"], $this->results["included"]), [$this->action => $this->results["data"]]));
+				if ($this->cache != null && $this->cache->ctype > 0) {
+					$this->cache->set($this->url_key, $str);
+				}
+				return $str;
 			}
 			break;
 		default:

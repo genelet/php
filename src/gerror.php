@@ -48,6 +48,7 @@ class Gerror
             1035 => "This input field is missing: ",
             1036 => "Please make sure your browser supports cookie.",
             1037 => "Missing input.",
+			1038 => "Login as admin is now allowed.",
 
             1040 => "Empty field.",
             1041 => "Foreign key forced but its value not provided.",

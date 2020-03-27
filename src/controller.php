@@ -64,36 +64,7 @@ $logger->info("logout.");
                 return $response->with_redirect($logout);
             } elseif ($this->Is_login($comp_name) || $this->Is_oauth2($comp_name)) {
 $logger->info("login using " . $this->provider_name);
-                $dbi = new Dbi($this->pdo);
-                $ticket = $this->Is_oauth2($comp_name)
-                ? new Oauth2($dbi, null, $c, $role_name, $tag_name, $comp_name)
-                : isset($_REQUEST[$this->provider_name])
-                ? new Procedure($dbi, null, $c, $role_name, $tag_name, $_REQUEST[$this->provider_name])
-                : new Procedure($dbi, null, $c, $role_name, $tag_name);
-				if ($is_json) {
-                	$err = $ticket->Basic();
-					if ($err !== null) {
-						header("Tabilet-Error: ". $err->error_code);
-						header("Tabilet-Error-Description: ".$err->error_string);
-						$response->code = 400;
-						return $response->with_error($err);
-					}
-				} else {
-                	$err = $ticket->Handler();
-					if ($err !== null) {
-						return $response->with_login($err);
-					}
-				}
-$logger->info("login succeeded.");
-				$signed = $ticket->Signature($ticket->Get_fields());
-				if ($ticket->IsBasic()==false) {
-					$ticket->Set_cookie($role_obj->surface, $signed);
-					$ticket->Set_cookie_session($role_obj->surface . "_", $signed);
-				}
-				if ($is_json) {
-					return $response->with_results(["token_type"=>"bearer", "access_token"=>$signed, "expires_in"=>$role_obj->duration]);
-				}
-				return $response->with_redirect($ticket->Uri);
+				return $this->login_or_as($c, $role_name, $tag_name, $comp_name, $is_json, $response);
             }
         }
         if (empty($this->components[$comp_name]) ||
@@ -121,10 +92,10 @@ $logger->info("check authentication for not public role.");
             if ($err != null) {
 $logger->info("ticket check failed.");
         		if ($is_json) {
-	header("Content-Type: application/json");
-	header('WWW-Authenticate: Bearer realm="'.$filter->script."/".$filter->Role_name."/".$filter->Tag_name."/".$filter->login_name.'", charset="UTF-8"');
-	header("Tabilet-Error: ". $err->error_code);
-	header("Tabilet-Error-Description: ". $err->error_string);
+					header("Content-Type: application/json");
+					header('WWW-Authenticate: Bearer realm="'.$filter->script."/".$filter->Role_name."/".$filter->Tag_name."/".$filter->login_name.'", charset="UTF-8"');
+					header("Tabilet-Error: ". $err->error_code);
+					header("Tabilet-Error-Description: ". $err->error_string);
 					$response->code = 401;
 					return $response->with_error($err);
 				}
@@ -143,17 +114,13 @@ $logger->info("acl failed.");
             return new Response(403);
         }
 
-//        if ($this->Is_loginas($action)) {
-//$logger->info("login as ...");
-//            return $filter->Login_as();
-//        }
-
 		$ttl = isset($filter->actionHash["ttl"]) ? $filter->actionHash["ttl"] : $this->ttl;
-		$cache = new Cache($c, $role_name, $tag_name, $action, $comp_name, $cache_type, $ttl);
 		if ($cache_type>0) {
-$logger->info("caching starts...");
+			$cache = new Cache($c, $role_name, $tag_name, $action, $comp_name, $cache_type, $ttl);
+			$response->cache = $cache;
+$logger->info("caching needed.");
 			if ($cache->has($url_key)) {
-				return $response->with_cached($cache->get($url_key));
+				return $response->with_cached();
 			 } elseif ($cache_type===1) { // GET id request
 				$_REQUEST[$filter->current_key] = $url_key;
 			 } elseif ($cache_type===2 && !empty($url_key)) {
@@ -191,8 +158,9 @@ $logger->info("start model action: " . $action);
 $logger->info("after completed.");
         if ($err != null) {return $response->with_error($err);}
 
-		if ($cache_type>0) {
-			$response->cache = $cache;
+        if ($this->Is_loginas($action) && !empty($model->OTHER[$action])) {
+$logger->info("login_as starts...");
+			return $this->login_or_as($c, $role_name, $tag_name, $comp_name, $is_json, $response, $model->OTHER[$action]);
 		}
 
 $logger->info("end page, and sending to browser.");
@@ -296,4 +264,52 @@ $logger->info("end page, and sending to browser.");
         : $this->default_actions[$_SERVER["REQUEST_METHOD"]];
 		return array($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, null);
 	}
+
+	private function get_ticket($c, $role_name, $tag_name, $comp_name) : Ticket {
+		$dbi = new Dbi($this->pdo);
+        return $this->Is_oauth2($comp_name)
+        ? new Oauth2($dbi, null, $c, $role_name, $tag_name, $comp_name)
+        : isset($_REQUEST[$this->provider_name])
+        ? new Procedure($dbi, null, $c, $role_name, $tag_name, $_REQUEST[$this->provider_name])
+        : new Procedure($dbi, null, $c, $role_name, $tag_name);
+	}
+
+	private function login_or_as($c, $role_name, $tag_name, $comp_name, $is_json, $response, $as=null)
+	{
+		$ticket = null;
+		$err = null;
+		if (isset($as)) {
+			$ticket = $this->get_ticket($c, $as["Role"], $tag_name, $comp_name);
+			$ticket->Uri = $as["Uri"];	
+			$ticket->Provider = $as["Provider"];	
+        	$err = $ticket->Handler_as($as["Login"]);
+		} else {
+			$ticket = $this->get_ticket($c, $role_name, $tag_name, $comp_name);
+			$err = ($is_json) ? $ticket->Basic() : $ticket->Handler();
+		}
+
+		if ($err !== null) {
+			if ($is_json) {
+				header("Tabilet-Error: ". $err->error_code);
+				header("Tabilet-Error-Description: ".$err->error_string);
+				$response->code = 400;
+				return $response->with_error($err);
+			}
+			return $response->with_login($err);
+		}
+
+		$signed = (!empty($as) && isset($as['Extra'])) ?
+			$ticket->Signature($ticket->Get_fields($as['Extra'])) :
+			$ticket->Signature($ticket->Get_fields());
+		$role = $ticket->roles[$ticket->Role_name];
+		if ($ticket->IsBasic()==false) {
+			$ticket->Set_cookie($role->surface, $signed);
+			$ticket->Set_cookie_session($role->surface . "_", $signed);
+		}
+		if ($is_json) {
+			return $response->with_results(["token_type"=>"bearer", "access_token"=>$signed, "expires_in"=>$role->duration]);
+		}
+		return $response->with_redirect($ticket->Uri);
+	}
+
 }
