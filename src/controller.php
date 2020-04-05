@@ -143,7 +143,8 @@ $logger->info("preset completed.");
 
         $extra = array();
         $nextextra = array();
-        $err = $filter->Before($model, $extra, $nextextra);
+        $onceextra = array();
+        $err = $filter->Before($model, $extra, $nextextra, $onceextra);
 $logger->info("before completed.");
         if ($err != null) {return $response->with_error($err);}
 
@@ -154,7 +155,7 @@ $logger->info("start model action: " . $action);
         	if ($err != null) {return $response->with_error($err);}
         }
 
-        $err = $filter->After($model);
+        $err = $filter->After($model, $onceextra);
 $logger->info("after completed.");
         if ($err != null) {return $response->with_error($err);}
 

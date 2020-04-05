@@ -6,6 +6,7 @@ namespace Genelet;
 class Filter extends Access
 {
 	public $ARGS;
+	private $oncepage;
 
 	public $Action; //		string
 	public $Component; //	string
@@ -53,6 +54,21 @@ class Filter extends Access
 			if (isset($fks[$this->Role_name])) {
 				$this->fkArray = $fks[$this->Role_name];
 			}
+		}
+		if (isset($comp->{"oncepage"})) {
+			$oncepage = array();
+			foreach ($comp->{"oncepage"} as $action => $obj_ms) {
+				$ms = array();
+				foreach ($obj_ms as $obj_m) {
+					$table = array();
+					foreach ($obj_m as $k => $v) {
+						$table[$k] = $v;
+					}
+					array_push($ms, $table);
+				}
+				$oncepage[$action] = $ms;
+			}
+			$this->oncepage = $oncepage;
 		}
 	}
 
@@ -118,7 +134,7 @@ class Filter extends Access
 		return null;
 	}
 
-	public function Before(object $model, array &$extra, array &$nextextra)  : ?Gerror {
+	public function Before(object &$model, array &$extra, array &$nextextra, array &$onceextra = null)  : ?Gerror {
 		$ARGS = $this->ARGS;
 		if (isset($this->actionHash["validate"])) {
 			foreach ($this->actionHash["validate"] as $k) {
@@ -143,7 +159,16 @@ class Filter extends Access
 		return null;
 	}
 
-	public function After(object $model) : ?Gerror {
+	public function After(object $model, array $onceextra = null) : ?Gerror {
+		if (isset($this->oncepage) && isset($this->oncepage[$this->Action])) {
+			foreach ($this->oncepage[$this->Action] as $page) {
+				if (!empty($onceextra)) {
+					array_shift($extra);
+				}
+				$err = $model->call_once($page, ...$onceextra);
+				if ($err !== null) {return $err;}
+			}
+		}
 		if (isset($this->fkArray) && !empty($model->LISTS)) {
 			$fk = $this->fkArray;
 			while (sizeof($fk)>3) {
