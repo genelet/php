@@ -21,14 +21,17 @@ class Oauth2 extends Procedure
             $a["grant_type"] = "authorization_code";
             $a["authorize_url"] = "https://accounts.google.com/o/oauth2/auth";
             $a["access_token_url"] = "https://accounts.google.com/o/oauth2/token";
+            $a["access_type"] = "offline";
+            $a["approval_prompt"] = "force";
             $a["endpoint"] = "https://www.googleapis.com/oauth2/v1/userinfo";
 			break;
         case "facebook":
-            $a["scope"] = "public_profile%20email";
-            $a["authorize_url"] = "https://www.facebook.com/dialog/oauth";
-            $a["access_token_url"] = "https://graph.facebook.com/oauth/access_token";
+            $a["scope"] = "public_profile,email";
+            $a["response_type"] = "code";
+            $a["authorize_url"] = "https://www.facebook.com/v6.0/dialog/oauth";
+            $a["access_token_url"] = "https://graph.facebook.com/v6.0/oauth/access_token";
             $a["endpoint"] = "https://graph.facebook.com/me";
-            $a["fields"] = "id,email,name,first_name,last_name,age_range,gender";
+            $a["fields"] = "id,email,first_name,last_name";
 			break;
         case "linkedin":
             $a["scope"] = "r_basicprofile";
@@ -132,30 +135,15 @@ class Oauth2 extends Procedure
 
         $client = new Client();
         $res = isset($defaults["token_method_get"]) ?
-$client->request('GET',  $defaults["access_token_url"], ['http_errors' => false, 'query'=>$form]) :
-$client->request("POST", $defaults["access_token_url"], ['headers' => ["accept" => "application/json"], 'http_errors' => false, 'form_params'=>$form]);
+		$client->request('GET',  $defaults["access_token_url"], ['http_errors' => false, 'query'=>$form]) :
+		$client->request("POST", $defaults["access_token_url"], ['headers' => ["accept" => "application/json"], 'http_errors' => false, 'form_params'=>$form]);
 #$this->logger->info($res);
 $this->logger->info($res->getReasonPhrase());
         if ($res->getStatusCode() != 200) {
             return new Gerror($res->getStatusCode());
         }
         $body = (string)$res->getBody();
-        $back = array();
-
-        switch ($this->Provider) {
-        case "facebook":
-            $m = parse_url($body);
-            if ($m === false) {return new Gerror(1400);}
-            $back["access_token"] = $m["access_token"];
-            $back["expires"] = $m["expires"];
-            break;
-        default:
-            $ret = json_decode($body);
-            if ($ret === null) {return new Gerror(1400);}
-            foreach ($ret as $k => $v) {
-                $back[$k] = $v;
-            }
-        }
+        $back = json_decode($body, true);
         if (empty($back["access_token"])) {return new Gerror(1401);}
         $this->Access_token = $back["access_token"];
 
@@ -170,12 +158,16 @@ $this->logger->info($res->getReasonPhrase());
             if ($this->Provider === "facebook") {
                 $form["fields"] = $defaults["fields"];
             }
+
             $h = array("Accept"=>"application/json");
+			if ($this->Provider === "github") {
+                $h["Authorization"] = "token ". $this->Access_token;
+            } else {
+                $h["Authorization"] = "Bearer ". $this->Access_token;
+			}
             if ($this->Provider === "linkedin") {
                 $h["x-li-format"] = "json";
-            } elseif ($this->Provider === "github") {
-                $h["Authorization"] = "token ". $this->Access_token;
-            }
+            } 
 
             $res = $client->request('GET', $endpoint, ['http_errors' => false, 'headers'=>$h, 'query'=>$form]);
 $this->logger->info($res->getReasonPhrase());
@@ -187,17 +179,85 @@ $this->logger->info($res->getReasonPhrase());
             }
         }
 
-        foreach ($defaults as $k => $v) {
-            if (empty($back[$k])) {
-                $back[$k] = $v;
-            }
-        }
         if (isset($_COOKIE[$probe_name."_1"])) {
             foreach (json_decode($_COOKIE[$probe_name."_1"]) as $k => $v) {
                 $back[$k] = $v;
             }
         }
+$this->logger->info($back);
 
         return $this->Fill_provider($back);
     }
 }
+
+/*
+FACEBOOK
+    [access_token] => EAAIpCZCs7ehMBANupYjf54PkylySJml3UtcyBTjmruDfPgeyoB0ldr1RoiD7zvjP3dxZBOS5NddoNNcIRA1wDwQvvz0GT4xNgiHHKPF8hfgnuw2Q8JKrVfMiGWWC3ZCwUMsDRetfsMb3yv7AhMZBxUAUsnukSTwZD
+    [token_type] => bearer
+    [expires_in] => 5183999
+    [id] => 10158715393768606
+    [email] => tianzhen99@yahoo.com
+    [first_name] => Peter
+    [last_name] => Bi
+
+GOOGLE
+    [access_token] => ya29.a0Ae4lvC0S1TOV3LYMf3aiNWEqO_wfQ1KmxIYMThRI2f4Yw3gjOc8Yt14VVb83tylBuuskdBl2kPp-yy5AokOruEINRFdFuauEreAe69QZA_AYSnOSE3N9JCEfn9jcHDI9z7T2v-vhFZzs1K_zNXdWlAqKf4xvpi0PdEo
+    [expires_in] => 3599
+    [refresh_token] => 1//0fGSVZsXWcJyyCgYIARAAGA8SNwF-L9Ir6Hyhakp33Pi6MkZsTKwpS2H7tS_wGVlvdMPxRZvKPp-w3PhvFDLVY4Nn3K-8X1ELnFQ
+    [scope] => https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid
+    [token_type] => Bearer
+    [id_token] => eyJhbGciOiJSUzI1NiIsImtpZCI6IjZmY2Y0MTMyMjQ3NjUxNTZiNDg3NjhhNDJmYWMwNjQ5NmEzMGZmNWEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXpwIjoiOTkyNDcyNjAwNTA5LTU2N2xka2IxaGowMXNoYzRmaGJrcXB2bW9vMWg2Mjg0LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiOTkyNDcyNjAwNTA5LTU2N2xka2IxaGowMXNoYzRmaGJrcXB2bW9vMWg2Mjg0LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTAzNTA1MDQ2MTMwNTU4NzE3Mjg4IiwiZW1haWwiOiJncmVldGluZ2xhbmRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJtcEowWmdIZ2dmMExhRUx1UFNlSzFnIiwiaWF0IjoxNTg2NjE2OTQ3LCJleHAiOjE1ODY2MjA1NDd9.DMFSUpVIGnMb8tM7MJSwOtjFb7ev2K9e8YatIDxuix-7wfEx82ItZqcdvO6YZUvGMqE2Fnh9V_q4cCH3w4V6QczdGnCDiTAW8DCj729WC7pCncPJ6h0V-KUd37XMSXKl8BA-0AaVmBCLYxtSiuv_nMh-4ysnsrAC-K9vEgRiRAv_9FZcQvBdFjIuHDbDUQZPeGlweqMHFnFTc8SUyh5Wcd51yyPqZteUEIYWnW6PZRx6kMQQnpwGv84YO5Ct5lAhcgI9MNMHGWFNSfT7jaRRKiJTVHPazO56UDIKUFHCsOqQE0Tj35e4j3F3bPDTX6NFIAqfJMZll1dFDLgK5al9MA
+    [id] => 103505046130558717288
+    [email] => greetingland@gmail.com
+    [verified_email] => 1
+    [name] => Peter Bi
+    [given_name] => Peter
+    [family_name] => Bi
+    [picture] => https://lh4.googleusercontent.com/-FmCKmMu0QEo/AAAAAAAAAAI/AAAAAAAAAAA/AAKWJJPgRp4TCmWwq04xVBXXFJRFU-GHEw/photo.jpg
+    [locale] => en
+    [response_type] => code
+
+GITHUB
+    [access_token] => 1306b6ccd64a1be7c7e8a697c5dad9445f77feb1
+    [token_type] => bearer
+    [scope] => user:email
+    [login] => genelet
+    [id] => 710562
+    [node_id] => MDQ6VXNlcjcxMDU2Mg==
+    [avatar_url] => https://avatars3.githubusercontent.com/u/710562?v=4
+    [gravatar_id] =>
+    [url] => https://api.github.com/users/genelet
+    [html_url] => https://github.com/genelet
+    [followers_url] => https://api.github.com/users/genelet/followers
+    [following_url] => https://api.github.com/users/genelet/following{/other_user}
+    [gists_url] => https://api.github.com/users/genelet/gists{/gist_id}
+    [starred_url] => https://api.github.com/users/genelet/starred{/owner}{/repo}
+    [subscriptions_url] => https://api.github.com/users/genelet/subscriptions
+    [organizations_url] => https://api.github.com/users/genelet/orgs
+    [repos_url] => https://api.github.com/users/genelet/repos
+    [events_url] => https://api.github.com/users/genelet/events{/privacy}
+    [received_events_url] => https://api.github.com/users/genelet/received_events
+    [type] => User
+    [site_admin] =>
+    [name] => Peter Bi
+    [company] => Greetingland, LLC
+    [blog] => http://www.genelet.com
+    [location] => Orange County, CA, USA
+    [email] => genelet@gmail.com
+    [hireable] =>
+    [bio] => VP of Technology of EIC & Founder of Greetingland
+    [public_repos] => 10
+    [public_gists] => 0
+    [followers] => 2
+    [following] => 1
+    [created_at] => 2011-04-05T11:49:56Z
+    [updated_at] => 2020-04-11T04:19:51Z
+    [response_type] => code
+    [grant_typ] => authorization_code
+    [authorize_url] => https://github.com/login/oauth/authorize
+    [access_token_url] => https://github.com/login/oauth/access_token
+    [endpoint] => https://api.github.com/user
+    [callback_url] => http://sandy/app.php/a/html/github
+    [client_id] => 4348f5e5456a8dc76c83
+    [client_secret] => e8edbd7a60ee9e695a833452be88dbb97b2f7832
+*/

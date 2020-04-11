@@ -69,7 +69,7 @@ class Procedure extends Ticket
         if (isset($_SERVER["HTTPS"])) {
             $http .= "s";
         }
-        return $http . "://" . $_SERVER["HTTP_HOST"] . $this->script . "/" . $this->Role_name . "/" . $this->Tag_name . "/" . $this->Provider . "?" . $this->go_uri_name . "=" . urlencode($this->Uri);
+        return $http . "://" . $_SERVER["HTTP_HOST"] . $this->script . "/" . $this->Role_name . "/" . $this->Tag_name . "/" . $this->Provider;
     }
 
     public function Fill_provider(array $back): ?Gerror
@@ -85,7 +85,7 @@ class Procedure extends Ticket
         $err = $this->Run_sql($issuer->sql, $in_vals);
         if ($err != null) {return $err;}
 
-        foreach ($this->role_obj->sttributes as $key) {
+        foreach ($this->role_obj->attributes as $key) {
             if (empty($this->Out_hash[$key])) {
                 $this->Out_hash[$key] = $back[$key];
             }
