@@ -268,11 +268,19 @@ $logger->info("end page, and sending to browser.");
 
 	private function get_ticket($c, $role_name, $tag_name, $comp_name) : Ticket {
 		$dbi = new Dbi($this->pdo);
+		if ($this->Is_oauth2($comp_name)) {
+			return new Oauth2($dbi, null, $c, $role_name, $tag_name, $comp_name);
+		} elseif (isset($_REQUEST[$this->provider_name])) {
+			return new Procedure($dbi, null, $c, $role_name, $tag_name, $_REQUEST[$this->provider_name]);
+		}
+		return new Procedure($dbi, null, $c, $role_name, $tag_name);
+/*
         return $this->Is_oauth2($comp_name)
         ? new Oauth2($dbi, null, $c, $role_name, $tag_name, $comp_name)
         : isset($_REQUEST[$this->provider_name])
         ? new Procedure($dbi, null, $c, $role_name, $tag_name, $_REQUEST[$this->provider_name])
         : new Procedure($dbi, null, $c, $role_name, $tag_name);
+*/
 	}
 
 	private function login_or_as($c, $role_name, $tag_name, $comp_name, $is_json, $response, $as=null)
@@ -289,7 +297,9 @@ $logger->info("end page, and sending to browser.");
 			$err = ($is_json) ? $ticket->Basic() : $ticket->Handler();
 		}
 
-		if ($err !== null) {
+		if ($err !== null && $err->error_code==303) {
+			return $response->with_redirect($ticket->Uri);
+		} elseif ($err !== null) {
 			if ($is_json) {
 				header("Tabilet-Error: ". $err->error_code);
 				header("Tabilet-Error-Description: ".$err->error_string);

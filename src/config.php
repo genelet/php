@@ -78,7 +78,7 @@ class Issuer
 		$this->conditions = array();
 		if (isset($issuer->{"Condition_uri"})) {
 			foreach ($issuer->{"Condition_uri"} as $obj) {
-				array_push($this->conditions, new Condition($k));
+				array_push($this->conditions, new Condition($obj));
 			}
 		}
 	}
@@ -209,6 +209,8 @@ class Config
 			foreach ($c->{"Oauth2s"} as $k) {
 				array_push($this->oauth2s, $k);
 			}
+		} else {
+			$this->oauth2s = ["google", "github", "facebook", "microsoft", "qq"];
 		}
 		$this->oauth1s = array();
 		if (isset($c->{"Oauth1s"})) {
