@@ -81,7 +81,7 @@ class Ticket extends Access
             $this->Uri = $this->probe_value($_COOKIE[$probe_name]);
         }
 
-        if (isset($_REQUEST[$err_name])) {
+        if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_REQUEST[$err_name])) {
             return new Gerror(intval($_REQUEST[$err_name]));
         }
 

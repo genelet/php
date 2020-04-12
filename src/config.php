@@ -50,7 +50,7 @@ class Issuer
 	public $provider_pars;
 	public function __construct(object $issuer)
 	{
-		$this->credential = array($issuer->{"Credential"}[0], $issuer->{"Credential"}[1]);
+		$this->credential = $issuer->{"Credential"};
 		$this->default = isset($issuer->{"Default"}) ? $issuer->{"Default"} : false;
 		$this->screen = isset($issuer->{"Screen"}) ? $issuer->{"Screen"} : 0;
 		$this->sql = $issuer->{"Sql"};

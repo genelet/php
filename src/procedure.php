@@ -27,6 +27,9 @@ class Procedure extends Ticket
         // if ($issuer->screen & 8) !=0 {array_push($in_vals, $this->Get_referer())}
         $out_pars = empty($issuer->out_pars) ? $this->role_obj->attributes : $issuer->out_pars;
         $this->Out_hash = array();
+$this->logger->info($call_name);
+$this->logger->info($in_vals);
+$this->logger->info($out_pars);
         return (strtolower(substr($call_name, 0, 7)) === "select ") ?
         $this->dbi->Get_sql_label($this->Out_hash, $out_pars, $call_name, ...$in_vals) :
         $this->dbi->Do_proc_label($this->Out_hash, $out_pars, $call_name, ...$in_vals);
@@ -76,13 +79,14 @@ class Procedure extends Ticket
     {
         $issuer = $this->Get_issuer();
         $in_vals = array();
+
         foreach ($issuer->in_pars as $par) {
             if (!empty($back[$par])) {
                 array_push($in_vals, $back[$par]);
             }
         }
 
-        $err = $this->Run_sql($issuer->sql, $in_vals);
+        $err = $this->Run_sql($issuer->sql, ...$in_vals);
         if ($err != null) {return $err;}
 
         foreach ($this->role_obj->attributes as $key) {

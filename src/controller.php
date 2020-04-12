@@ -267,7 +267,7 @@ $logger->info("end page, and sending to browser.");
 	}
 
 	private function get_ticket($c, $role_name, $tag_name, $comp_name) : Ticket {
-		$dbi = new Dbi($this->pdo);
+		$dbi = new Dbi($this->pdo, $this->logger);
 		if ($this->Is_oauth2($comp_name)) {
 			return new Oauth2($dbi, null, $c, $role_name, $tag_name, $comp_name);
 		} elseif (isset($_REQUEST[$this->provider_name])) {
@@ -296,7 +296,8 @@ $logger->info("end page, and sending to browser.");
 			$ticket = $this->get_ticket($c, $role_name, $tag_name, $comp_name);
 			$err = ($is_json) ? $ticket->Basic() : $ticket->Handler();
 		}
-
+$this->logger->info("ticket returns:");
+$this->logger->info($err);
 		if ($err !== null && $err->error_code==303) {
 			return $response->with_redirect($ticket->Uri);
 		} elseif ($err !== null) {
@@ -314,6 +315,7 @@ $logger->info("end page, and sending to browser.");
 			$ticket->Signature($ticket->Get_fields());
 		$role = $ticket->roles[$ticket->Role_name];
 		if ($ticket->IsBasic()==false) {
+$this->logger->info("set up cookie.");
 			$ticket->Set_cookie($role->surface, $signed);
 			$ticket->Set_cookie_session($role->surface . "_", $signed);
 		}

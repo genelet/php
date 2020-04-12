@@ -99,7 +99,7 @@ class Oauth2 extends Procedure
 
         $probe_name = $this->go_probe_name;
         if (isset($uri)) {
-            $this->Set_cookie_session($probe_name, $uri);
+            $this->Set_cookie_session($probe_name, urlencode($uri));
         }
         if (isset($saved)) {
             $this->Set_cookie_session($probe_name."_1", $saved);
@@ -119,7 +119,7 @@ class Oauth2 extends Procedure
         }
 
         $defaults = $this->Defaults;
-        $this->Uri = isset($_COOKIE[$this->go_probe_name]) ? $_COOKIE[$this->go_probe_name] : $this->Callback_address();
+        $this->Uri = isset($_COOKIE[$this->go_probe_name]) ? urldecode($_COOKIE[$this->go_probe_name]) : $this->Callback_address();
 		$cbk = isset($defaults["callback_url"]) ? $defaults["callback_url"] : $this->Uri;
         $form = array(
             "code" => $_REQUEST[$cred[0]],
@@ -179,12 +179,12 @@ $this->logger->info($res->getReasonPhrase());
             }
         }
 
+        $probe_name = $this->go_probe_name;
         if (isset($_COOKIE[$probe_name."_1"])) {
             foreach (json_decode($_COOKIE[$probe_name."_1"]) as $k => $v) {
                 $back[$k] = $v;
             }
         }
-$this->logger->info($back);
 
         return $this->Fill_provider($back);
     }
