@@ -31,7 +31,7 @@ final class Oauth2Test extends TestCase
         $_SERVER["HTTPS"] = "Yes";
         $_SERVER["HTTP_HOST"] = "aaa.bbb.com";
         $this->assertEquals(
-            "https://aaa.bbb.com/bb/m/json/github?go_uri=%2Fbb%2Fm%2Fe%2Fcomp%3Faction%3Dact",
+            "https://aaa.bbb.com/bb/m/json/github",
             $proc->Callback_address()
         );
 		$this->assertEquals($proc->Defaults["authorize_url"], "https://github.com/login/oauth/authorize");

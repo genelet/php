@@ -54,6 +54,7 @@ final class TicketTest extends TestCase
 
         $_COOKIE["go_probe"] = "/bb/m/e/comp?action=act";
         $_REQUEST["go_err"] = "1037";
+        $_SERVER["REQUEST_METHOD"] = "GET";
         $err = $ticket->Handler();
         $this->assertIsObject($err);
         $this->assertEquals($_COOKIE["go_probe"], $ticket->Uri);

@@ -31,7 +31,7 @@ final class ProcedureTest extends TestCase
         $_SERVER["HTTPS"] = "Yes";
         $_SERVER["HTTP_HOST"] = "aaa.bbb.com";
         $this->assertEquals(
-            "https://aaa.bbb.com/bb/m/json/facebook?go_uri=%2Fbb%2Fm%2Fe%2Fcomp%3Faction%3Dact",
+            "https://aaa.bbb.com/bb/m/json/facebook",
             $proc->Callback_address()
         );
     }
