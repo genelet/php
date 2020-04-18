@@ -32,7 +32,10 @@ $logger->info("request method not defined.");
         }
 		
         list ($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, $err) = $this->getUrl();
-        if (isset($err)) { return $err; }
+        if (isset($err)) {
+$logger->info($err);
+			return new Response($err->error_code);
+		 }
 $logger->info("role=>" . $role_name);
 $logger->info("tag=>" . $tag_name);
 $logger->info("comp=>" . $comp_name);

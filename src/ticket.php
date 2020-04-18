@@ -9,7 +9,7 @@ class Ticket extends Access
     public $Out_hash; #map[string]interface{}
 	public $Provider;
 
-	private bool $basic;
+	private $basic;
 
     public function __construct(string $uri=null, object $c, string $r, string $t, string $p = null)
     {
