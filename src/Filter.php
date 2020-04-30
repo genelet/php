@@ -143,6 +143,11 @@ class Filter extends Access
 				}
 			}
 		}
+		foreach ($model->Topics_pars as $k) {
+			if (isset($ARGS[$k])) {
+				$extra[$k] = $ARGS[$k];
+			}
+		}
 		if (isset($this->fkArray) && isset($this->fkArray[0])) {
 			$name = $this->fkArray[0];
 			if (empty($ARGS[$name])) {return new Gerror(1041);}

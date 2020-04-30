@@ -91,7 +91,13 @@ $logger->info("ID from URL.");
         if (!$filter->Is_public()) {
 $logger->info("check authentication for not public role.");
 			$surface = $filter->roles[$role_name]->surface;
-            $err = empty($_REQUEST[$surface]) ? $filter->Verify_cookie() : $filter->Verify_cookie($_REQUEST[$surface]);
+            if (empty($_REQUEST[$surface])) {
+				$err = $filter->Verify_cookie();
+			} else {
+				$err = $filter->Verify_cookie($_REQUEST[$surface]);
+				unset($_REQUEST[$surface]);
+				unset($OLD[$surface]);
+			}
             if ($err != null) {
 $logger->info("ticket check failed.");
         		if ($is_json) {
