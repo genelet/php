@@ -64,7 +64,6 @@ if (isset($this->logger)) { $this->logger->info($sql, $args); }
 
     public function Get_args(array &$res, string $sql, ...$args): ?Gerror
     {
-if (isset($this->logger)) { $this->logger->info($sql, $args); }
         $lists = array();
         $err = $this->Select_sql($lists, $sql, ...$args);
         if ($err != null) {return $err;}
@@ -78,7 +77,6 @@ if (isset($this->logger)) { $this->logger->info($sql, $args); }
 
     public function Get_sql_label(array &$res, array $select_labels, string $sql, ...$args): ?Gerror
     {
-if (isset($this->logger)) { $this->logger->info($sql, $args); }
         $lists = array();
         $err = $this->Select_sql_label($lists, $select_labels, $sql, ...$args);
         if ($err != null) {return $err;}
@@ -146,7 +144,6 @@ if (isset($this->logger)) { $this->logger->info($sql, $args); }
 
     public function Do_proc(string $proc_name, ...$args): ?Gerror
     {
-if (isset($this->logger)) { $this->logger->info($proc_name, $args); }
         $n = sizeof($args);
         $str = "CALL " . $proc_name . "(" . implode(',', array_fill(0, $n, '?'));
         $str .= ")";
@@ -156,7 +153,6 @@ if (isset($this->logger)) { $this->logger->info($proc_name, $args); }
 
     public function Do_proc_label(array &$hash, array $names, string $proc_name, ...$args): ?Gerror
     {
-if (isset($this->logger)) { $this->logger->info($proc_name, $args); }
         $n = sizeof($args);
         $str = "CALL " . $proc_name . "(" . implode(',', array_fill(0, $n, '?'));
         $str_n = "@" . implode(", @", $names);
@@ -169,7 +165,6 @@ if (isset($this->logger)) { $this->logger->info($proc_name, $args); }
 
     public function Select_proc_label(array &$lists, array $select_labels, string $proc_name, ...$args): ?Gerror
     {
-if (isset($this->logger)) { $this->logger->info($proc_name, $args); }
         $n = sizeof($args);
         $str = "CALL " . $proc_name . "(" . implode(',', array_fill(0, $n, '?'));
         $str .= ")";
@@ -179,7 +174,6 @@ if (isset($this->logger)) { $this->logger->info($proc_name, $args); }
 
     public function Select_do_proc_label(array &$lists, array $select_labels, array &$hash, array $names, string $proc_name, ...$args): ?Gerror
     {
-if (isset($this->logger)) { $this->logger->info($proc_name, $args); }
         $n = sizeof($args);
         $str = "CALL " . $proc_name . "(" . implode(',', array_fill(0, $n, '?'));
         $str_n = "@" . implode(", @", $names);

@@ -95,7 +95,7 @@ class Model extends Crud
 				foreach ($obj_ms as $obj_m) {
 					$table = array();
 					foreach ($obj_m as $k => $v) {
-						if ($k==="relate_item") {
+						if ($k=="relate_item") {
 							$table[$k] = array();
 							foreach ($v as $kk => $vv) {
 								$table[$k][$kk] = $vv;
@@ -166,7 +166,7 @@ class Model extends Crud
         }
         $in = $ARGS[$this->FIELDS];
         $out = array();
-        if (gettype($in) === "array") {
+        if (gettype($in) == "array") {
             foreach ($in as $val) {
                 if (array_search($val, $pars) !== false) {
                     array_push($out, $val);
@@ -195,9 +195,9 @@ class Model extends Crud
     {
         $ARGS = $this->ARGS;
         if (isset($extra[$v])) {
-            return (gettype($extra[$v]) === "array") ? $extra[$v] : [$extra[$v]];
+            return (gettype($extra[$v]) == "array") ? $extra[$v] : [$extra[$v]];
         } elseif (isset($ARGS[$v])) {
-            return (gettype($ARGS[$v]) === "array") ? $ARGS[$v] : [$ARGS[$v]];
+            return (gettype($ARGS[$v]) == "array") ? $ARGS[$v] : [$ARGS[$v]];
         }
         return null;
     }
@@ -218,10 +218,10 @@ class Model extends Crud
     public function get_id_val(array $extra = null): array
     {
         $id = $this->Current_key;
-        $val = (gettype($id) === "array")
+        $val = (gettype($id) == "array")
         ? $this->properValues($id, $extra)
         : $this->properValue($id, $extra);
-        if ($val === null) {return array($id);}
+        if ($val == null) {return array($id);}
         return array($id, $val);
     }
 
@@ -230,11 +230,11 @@ class Model extends Crud
         $ARGS = $this->ARGS;
         $totalno = $this->TOTALNO;
         $pageno = $this->PAGENO;
-        if ($this->Total_force != 0 && isset($ARGS[$this->ROWCOUNT]) && (empty($ARGS[$pageno]) || $ARGS[$pageno] === "1")) {
+        if ($this->Total_force != 0 && isset($ARGS[$this->ROWCOUNT]) && (empty($ARGS[$pageno]) || $ARGS[$pageno] == "1")) {
             $nt = $ARGS[$totalno];
             if ($this->Total_force < -1) {
                 $nt = abs($this->Total_force);
-            } elseif ($this->Total_force === -1 || empty($ARGS[$totalno])) {
+            } elseif ($this->Total_force == -1 || empty($ARGS[$totalno])) {
                 $hash = array();
                 $err = $this->Total_hash($hash, $totalno, ...$extra);
                 if ($err != null) {return $err;}
@@ -326,7 +326,7 @@ class Model extends Crud
         $err = $this->Insupd_hash($field_values, $upd_field_values, $keys, $uniques, $s_hash);
         if ($err != null) {return $err;}
 
-        if (isset($this->Current_id_auto) && $s_hash === "insert") {
+        if (isset($this->Current_id_auto) && $s_hash == "insert") {
             $field_values[$this->Current_id_auto] = $this->Last_id;
             $this->ARGS[$this->Current_id_auto] = $this->Last_id;
         }
@@ -345,7 +345,7 @@ class Model extends Crud
         $field_values = $this->get_fv($this->Update_pars);
         if (empty($field_values)) {return new Gerror(1074);}
 
-        if (count($field_values) === 1 && isset($field_values[$id])) {
+        if (count($field_values) == 1 && isset($field_values[$id])) {
             $this->LISTS = array($field_values);
             return $this->process_after("update", ...$extra);
         }
@@ -379,7 +379,7 @@ class Model extends Crud
         if ($err != null) {return $err;}
 
         $field_values = array();
-        if (gettype($id) === "array") {
+        if (gettype($id) == "array") {
             foreach ($id as $i => $v) {
                 $field_values[$v] = $val[$i];
             }
@@ -432,11 +432,15 @@ class Model extends Crud
             $column = $ARGS[$this->SORTBY];
         } elseif (isset($this->Current_tables)) {
             $table = $this->Current_tables[0];
-            $name = isset($table["alias"]) ? $table["alias"] : $table["name"];
-            $name .= ".";
-            $column = $name . ((gettype($this->Current_key) === "array") ? implode(", $name", $this->Current_key) : $this->Current_key);
+			if (isset($table["sortby"])) {
+				$column = $table["sortby"];
+			} else {
+            	$name = isset($table["alias"]) ? $table["alias"] : $table["name"];
+            	$name .= ".";
+            	$column = $name . ((gettype($this->Current_key) == "array") ? implode(", $name", $this->Current_key) : $this->Current_key);
+			}
         } else {
-            $column = (gettype($this->Current_key) === "array") ? implode(", ", $this->Current_key) : $this->Current_key;
+            $column = (gettype($this->Current_key) == "array") ? implode(", ", $this->Current_key) : $this->Current_key;
         }
 
         $order = "ORDER BY " . $column;
