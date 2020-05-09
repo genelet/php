@@ -25,6 +25,14 @@ class Oauth2 extends Procedure
             $a["approval_prompt"] = "force";
             $a["endpoint"] = "https://www.googleapis.com/oauth2/v1/userinfo";
 			break;
+        case "zoom":
+            $a["scope"] = "user:read:admin";
+            $a["response_type"] = "code";
+            $a["grant_type"] = "authorization_code";
+            $a["authorize_url"] = "https://zoom.us/oauth/authorize";
+            $a["access_token_url"] = "https://zoom.us/oauth/token";
+            $a["endpoint"] = "https://api.zoom.us/v2/users/me";
+			break;
         case "facebook":
             $a["scope"] = "public_profile,email";
             $a["response_type"] = "code";
@@ -82,10 +90,10 @@ class Oauth2 extends Procedure
         $this->Defaults = $a;
     }
 
-	public function Build_authorize(string $state=null, string $uri=null, string $saved=null) : ?Gerror
+	public function Build_authorize(string $state=null, string $uri=null) : ?Gerror
     {
 		$defaults = $this->Defaults;
-        $cbk = isset($defaults["callback_url"]) ? $defaults["callback_url"] : $this->Callback_address();
+        $cbk = $defaults["callback_url"];
 
         $dest = $defaults["authorize_url"] . "?client_id=" . $defaults["client_id"] . "&redirect_uri=" . urlencode($cbk);
         if (isset($state)) {
@@ -95,14 +103,6 @@ class Oauth2 extends Procedure
             if (isset($defaults[$k])) {
                 $dest .= "&" . $k . "=" . urlencode($defaults[$k]);
             }
-        }
-
-        $probe_name = $this->go_probe_name;
-        if (isset($uri)) {
-            $this->Set_cookie_session($probe_name, urlencode($uri));
-        }
-        if (isset($saved)) {
-            $this->Set_cookie_session($probe_name."_1", $saved);
         }
         $this->Uri = $dest;
 
@@ -119,27 +119,41 @@ class Oauth2 extends Procedure
         }
 
         $defaults = $this->Defaults;
-        $this->Uri = isset($_COOKIE[$this->go_probe_name]) ? urldecode($_COOKIE[$this->go_probe_name]) : $this->Callback_address();
-		$cbk = isset($defaults["callback_url"]) ? $defaults["callback_url"] : $this->Uri;
+        $landing  = "/";
+		if (isset($defaults["landing"])) {
+			$landing = $defaults["landing"];
+		}
+        $this->Uri = $landing;
         $form = array(
             "code" => $_REQUEST[$cred[0]],
-            "client_id" => $defaults["client_id"],
-            "client_secret" => $defaults["client_secret"],
-            "redirect_uri" => $cbk);
+            "redirect_uri" => $defaults["callback_url"]);
         if (isset($_REQUEST["state"])) {
             $form["state"] = $_REQUEST["state"];
         }
         if (isset($defaults["grant_type"])) {
             $form["grant_type"] = $defaults["grant_type"];
         }
+		$options = ['http_errors' => false];
+		if ($this->Provider=="zoom") {
+			$options["auth"] = [$defaults["client_id"], $defaults["client_secret"]];
+		} else {
+			$form["client_id"]     = $defaults["client_id"];
+			$form["client_secret"] = $defaults["client_secret"];
+		}	
 
         $client = new Client();
-        $res = isset($defaults["token_method_get"]) ?
-		$client->request('GET',  $defaults["access_token_url"], ['http_errors' => false, 'query'=>$form]) :
-		$client->request("POST", $defaults["access_token_url"], ['headers' => ["accept" => "application/json"], 'http_errors' => false, 'form_params'=>$form]);
-#$this->logger->info($res);
-$this->logger->info($res->getReasonPhrase());
+		$m = "POST";
+		if (isset($defaults["token_method_get"])) {
+			$m = "GET";
+			$options['query'] = $form;
+		} else {
+			$options['form_params'] = $form;
+		}
+        $res = $client->request($m, $defaults["access_token_url"], $options);
         if ($res->getStatusCode() != 200) {
+            if ($body = $res->getBody()) {
+                $this->logger->info($body->getContents());
+            }
             return new Gerror($res->getStatusCode());
         }
         $body = (string)$res->getBody();
@@ -160,18 +174,16 @@ $this->logger->info($res->getReasonPhrase());
             }
 
             $h = array("Accept"=>"application/json");
-			if ($this->Provider === "github") {
-                $h["Authorization"] = "token ". $this->Access_token;
-            } else {
-                $h["Authorization"] = "Bearer ". $this->Access_token;
-			}
+            $h["Authorization"] = "Bearer ". $this->Access_token;
             if ($this->Provider === "linkedin") {
                 $h["x-li-format"] = "json";
             } 
 
             $res = $client->request('GET', $endpoint, ['http_errors' => false, 'headers'=>$h, 'query'=>$form]);
-$this->logger->info($res->getReasonPhrase());
             if ($res->getStatusCode() != 200) {
+                if ($body = $res->getBody()) {
+                    $this->logger->info($body->getContents());
+                }
                 return new Gerror($res->getStatusCode());
             }
             foreach (json_decode((string)$res->getBody()) as $k => $v) {
@@ -191,6 +203,46 @@ $this->logger->info($res->getReasonPhrase());
 }
 
 /*
+
+ZOOM
+{
+  "access_token": "eyJhbGciOiJIUzUxMiIsInYiOiIyLjAiLCJraWQiOiI8S0lEPiJ9.eyJ2ZXIiOiI2IiwiY2xpZW50SWQiOiI8Q2xpZW50X0lEPiIsImNvZGUiOiI8Q29kZT4iLCJpc3MiOiJ1cm46em9vbTpjb25uZWN0OmNsaWVudGlkOjxDbGllbnRfSUQ-IiwiYXV0aGVudGljYXRpb25JZCI6IjxBdXRoZW50aWNhdGlvbl9JRD4iLCJ1c2VySWQiOiI8VXNlcl9JRD4iLCJncm91cE51bWJlciI6MCwiYXVkIjoiaHR0cHM6Ly9vYXV0aC56b29tLnVzIiwiYWNjb3VudElkIjoiPEFjY291bnRfSUQ-IiwibmJmIjoxNTgwMTQ2OTkzLCJleHAiOjE1ODAxNTA1OTMsInRva2VuVHlwZSI6ImFjY2Vzc190b2tlbiIsImlhdCI6MTU4MDE0Njk5MywianRpIjoiPEpUST4iLCJ0b2xlcmFuY2VJZCI6MjV9.F9o_w7_lde4Jlmk_yspIlDc-6QGmVrCbe_6El-xrZehnMx7qyoZPUzyuNAKUKcHfbdZa6Q4QBSvpd6eIFXvjHw",
+  "token_type": "bearer",
+  "refresh_token": "eyJhbGciOiJIUzUxMiIsInYiOiIyLjAiLCJraWQiOiI8S0lEPiJ9.eyJ2ZXIiOiI2IiwiY2xpZW50SWQiOiI8Q2xpZW50X0lEPiIsImNvZGUiOiI8Q29kZT4iLCJpc3MiOiJ1cm46em9vbTpjb25uZWN0OmNsaWVudGlkOjxDbGllbnRfSUQ-IiwiYXV0aGVudGljYXRpb25JZCI6IjxBdXRoZW50aWNhdGlvbl9JRD4iLCJ1c2VySWQiOiI8VXNlcl9JRD4iLCJncm91cE51bWJlciI6MCwiYXVkIjoiaHR0cHM6Ly9vYXV0aC56b29tLnVzIiwiYWNjb3VudElkIjoiPEFjY291bnRfSUQ-IiwibmJmIjoxNTgwMTQ2OTkzLCJleHAiOjIwNTMxODY5OTMsInRva2VuVHlwZSI6InJlZnJlc2hfdG9rZW4iLCJpYXQiOjE1ODAxNDY5OTMsImp0aSI6IjxKVEk-IiwidG9sZXJhbmNlSWQiOjI1fQ.Xcn_1i_tE6n-wy6_-3JZArIEbiP4AS3paSD0hzb0OZwvYSf-iebQBr0Nucupe57HUDB5NfR9VuyvQ3b74qZAfA",
+  "expires_in": 3599,
+  "scope": "user:read:admin"
+}
+{
+  "id": "KdYKjnimT4KPd8FFgQt9FQ",
+  "first_name": "Jane",
+  "last_name": "Dev",
+  "email": "jane.dev@email.com",
+  "type": 2,
+  "role_name": "Owner",
+  "pmi": 1234567890,
+  "use_pmi": false,
+  "vanity_url": "https://janedevinc.zoom.us/my/janedev",
+  "personal_meeting_url": "https://janedevinc.zoom.us/j/1234567890",
+  "timezone": "America/Denver",
+  "verified": 1,
+  "dept": "",
+  "created_at": "2019-04-05T15:24:32Z",
+  "last_login_time": "2019-12-16T18:02:48Z",
+  "last_client_version": "4.6.12611.1124(mac)",
+  "pic_url": "https://janedev.zoom.us/p/KdYKjnimFR5Td8KKdQt9FQ/19f6430f-ca72-4154-8998-ede6be4542c7-837",
+  "host_key": "533895",
+  "jid": "kdykjnimt4kpd8kkdqt9fq@xmpp.zoom.us",
+  "group_ids": [],
+  "im_group_ids": [
+    "3NXCD9VFTCOUH8LD-QciGw"
+  ],
+  "account_id": "gVcjZnYYRLDbb_MfgHuaxg",
+  "language": "en-US",
+  "phone_country": "US",
+  "phone_number": "+1 1234567891",
+  "status": "active"
+}
+
 FACEBOOK
     [access_token] => EAAIpCZCs7ehMBANupYjf54PkylySJml3UtcyBTjmruDfPgeyoB0ldr1RoiD7zvjP3dxZBOS5NddoNNcIRA1wDwQvvz0GT4xNgiHHKPF8hfgnuw2Q8JKrVfMiGWWC3ZCwUMsDRetfsMb3yv7AhMZBxUAUsnukSTwZD
     [token_type] => bearer
@@ -208,11 +260,11 @@ GOOGLE
     [token_type] => Bearer
     [id_token] => eyJhbGciOiJSUzI1NiIsImtpZCI6IjZmY2Y0MTMyMjQ3NjUxNTZiNDg3NjhhNDJmYWMwNjQ5NmEzMGZmNWEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXpwIjoiOTkyNDcyNjAwNTA5LTU2N2xka2IxaGowMXNoYzRmaGJrcXB2bW9vMWg2Mjg0LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiOTkyNDcyNjAwNTA5LTU2N2xka2IxaGowMXNoYzRmaGJrcXB2bW9vMWg2Mjg0LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTAzNTA1MDQ2MTMwNTU4NzE3Mjg4IiwiZW1haWwiOiJncmVldGluZ2xhbmRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJtcEowWmdIZ2dmMExhRUx1UFNlSzFnIiwiaWF0IjoxNTg2NjE2OTQ3LCJleHAiOjE1ODY2MjA1NDd9.DMFSUpVIGnMb8tM7MJSwOtjFb7ev2K9e8YatIDxuix-7wfEx82ItZqcdvO6YZUvGMqE2Fnh9V_q4cCH3w4V6QczdGnCDiTAW8DCj729WC7pCncPJ6h0V-KUd37XMSXKl8BA-0AaVmBCLYxtSiuv_nMh-4ysnsrAC-K9vEgRiRAv_9FZcQvBdFjIuHDbDUQZPeGlweqMHFnFTc8SUyh5Wcd51yyPqZteUEIYWnW6PZRx6kMQQnpwGv84YO5Ct5lAhcgI9MNMHGWFNSfT7jaRRKiJTVHPazO56UDIKUFHCsOqQE0Tj35e4j3F3bPDTX6NFIAqfJMZll1dFDLgK5al9MA
     [id] => 103505046130558717288
-    [email] => greetingland@gmail.com
+    [email] => gd@gmail.com
     [verified_email] => 1
-    [name] => Peter Bi
-    [given_name] => Peter
-    [family_name] => Bi
+    [name] => Pe Be
+    [given_name] => Pe
+    [family_name] => Be
     [picture] => https://lh4.googleusercontent.com/-FmCKmMu0QEo/AAAAAAAAAAI/AAAAAAAAAAA/AAKWJJPgRp4TCmWwq04xVBXXFJRFU-GHEw/photo.jpg
     [locale] => en
     [response_type] => code
@@ -239,13 +291,13 @@ GITHUB
     [received_events_url] => https://api.github.com/users/genelet/received_events
     [type] => User
     [site_admin] =>
-    [name] => Peter Bi
-    [company] => Greetingland, LLC
+    [name] => Pe Be
+    [company] => Grend, LLC
     [blog] => http://www.genelet.com
     [location] => Orange County, CA, USA
-    [email] => genelet@gmail.com
+    [email] => g@gmail.com
     [hireable] =>
-    [bio] => VP of Technology of EIC & Founder of Greetingland
+    [bio] => tingland
     [public_repos] => 10
     [public_gists] => 0
     [followers] => 2
@@ -258,6 +310,4 @@ GITHUB
     [access_token_url] => https://github.com/login/oauth/access_token
     [endpoint] => https://api.github.com/user
     [callback_url] => http://sandy/app.php/a/html/github
-    [client_id] => 4348f5e5456a8dc76c83
-    [client_secret] => e8edbd7a60ee9e695a833452be88dbb97b2f7832
 */

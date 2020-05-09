@@ -306,10 +306,11 @@ $logger->info("end page, and sending to browser.");
 			$err = ($is_json) ? $ticket->Basic() : $ticket->Handler();
 		}
 $this->logger->info("ticket returns:");
-$this->logger->info($err);
 		if ($err !== null && $err->error_code==303) {
+$this->logger->info($err);
 			return $response->with_redirect($ticket->Uri);
 		} elseif ($err !== null) {
+$this->logger->info($err);
 			if ($is_json) {
 				header("Tabilet-Error: ". $err->error_code);
 				header("Tabilet-Error-Description: ".$err->error_string);
@@ -331,6 +332,7 @@ $this->logger->info("set up cookie.");
 		if ($is_json) {
 			return $response->with_results(["token_type"=>"bearer", "access_token"=>$signed, "expires_in"=>$role->duration]);
 		}
+$this->logger->info("redirect: " . $ticket->Uri);
 		return $response->with_redirect($ticket->Uri);
 	}
 

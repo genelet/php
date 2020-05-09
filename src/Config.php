@@ -210,7 +210,7 @@ class Config
 				array_push($this->oauth2s, $k);
 			}
 		} else {
-			$this->oauth2s = ["google", "github", "facebook", "microsoft", "qq"];
+			$this->oauth2s = ["google", "zoom", "github", "facebook", "microsoft", "qq"];
 		}
 		$this->oauth1s = array();
 		if (isset($c->{"Oauth1s"})) {

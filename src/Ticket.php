@@ -19,7 +19,7 @@ class Ticket extends Access
 		$this->basic = false;
     }
 
-	private function probe_value(string $input=null) : string {
+	protected function probe_value(string $input=null) : string {
 		if (isset($_REQUEST[$this->go_uri_name])) {
 			return $_REQUEST[$this->go_uri_name];
 		}

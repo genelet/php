@@ -231,7 +231,7 @@ class Model extends Crud
         $totalno = $this->TOTALNO;
         $pageno = $this->PAGENO;
         if ($this->Total_force != 0 && isset($ARGS[$this->ROWCOUNT]) && (empty($ARGS[$pageno]) || $ARGS[$pageno] == "1")) {
-            $nt = $ARGS[$totalno];
+            $nt = 0;
             if ($this->Total_force < -1) {
                 $nt = abs($this->Total_force);
             } elseif ($this->Total_force == -1 || empty($ARGS[$totalno])) {
@@ -239,7 +239,9 @@ class Model extends Crud
                 $err = $this->Total_hash($hash, $totalno, ...$extra);
                 if ($err != null) {return $err;}
                 $nt = $hash[$totalno];
-            }
+            } else {
+            	$nt = $ARGS[$totalno];
+			}
             $this->ARGS[$totalno] = $nt;
             $nr = $ARGS[$this->ROWCOUNT];
             $this->ARGS[$this->MAXPAGENO] = floor(($nt - 1) / $nr) + 1;
