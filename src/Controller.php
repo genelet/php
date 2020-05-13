@@ -30,6 +30,11 @@ $logger->screen_start($_SERVER["REQUEST_METHOD"], $_SERVER["REQUEST_URI"], $_SER
 $logger->info("request method not defined.");
             return new Response(405);
         }
+		foreach ($_REQUEST as $k => $v) {
+			if ($v=="") {
+				unset($_REQUEST[$k]);
+			}
+		}
 		
         list ($cache_type, $role_name, $tag_name, $comp_name, $action, $url_key, $err) = $this->getUrl();
         if (isset($err)) {
@@ -163,6 +168,7 @@ $logger->info("start model action: " . $action);
             $err = $model->$action($extra, ...$nextextra);
         	if ($err != null) {return $response->with_error($err);}
         }
+$logger->info("action $action completed.");
 
         $err = $filter->After($model, $onceextra);
 $logger->info("after completed.");

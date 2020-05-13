@@ -6,7 +6,7 @@ namespace Genelet;
 class Filter extends Access
 {
 	public $ARGS;
-	private $oncepage;
+	private $oncepages;
 
 	public $Action; //		string
 	public $Component; //	string
@@ -55,9 +55,9 @@ class Filter extends Access
 				$this->fkArray = $fks[$this->Role_name];
 			}
 		}
-		if (isset($comp->{"oncepage"})) {
-			$oncepage = array();
-			foreach ($comp->{"oncepage"} as $action => $obj_ms) {
+		if (isset($comp->{"oncepages"})) {
+			$oncepages = array();
+			foreach ($comp->{"oncepages"} as $action => $obj_ms) {
 				$ms = array();
 				foreach ($obj_ms as $obj_m) {
 					$table = array();
@@ -66,9 +66,9 @@ class Filter extends Access
 					}
 					array_push($ms, $table);
 				}
-				$oncepage[$action] = $ms;
+				$oncepages[$action] = $ms;
 			}
-			$this->oncepage = $oncepage;
+			$this->oncepages = $oncepages;
 		}
 	}
 
@@ -165,13 +165,13 @@ class Filter extends Access
 	}
 
 	public function After(object $model, array $onceextra = null) : ?Gerror {
-		if (isset($this->oncepage) && isset($this->oncepage[$this->Action])) {
-			foreach ($this->oncepage[$this->Action] as $page) {
-				if (!empty($onceextra)) {
-					array_shift($extra);
-				}
+		if (isset($this->oncepages) && isset($this->oncepages[$this->Action])) {
+			foreach ($this->oncepages[$this->Action] as $page) {
 				$err = $model->call_once($page, ...$onceextra);
 				if ($err !== null) {return $err;}
+				if (!empty($onceextra)) {
+					array_shift($onceextra);
+				}
 			}
 		}
 		if (isset($this->fkArray) && !empty($model->LISTS)) {

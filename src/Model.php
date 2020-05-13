@@ -268,6 +268,10 @@ class Model extends Crud
         $field_values = $this->filtered_fields($this->Edit_pars);
         if (empty($field_values)) {return new Gerror(1077);}
 
+		if (isset($extra[0]) && isset($extra[0][$id])) {
+			unset($extra[0][$id]); // redundant select condition
+		}
+
         $err = $this->Edit_hash($this->LISTS, $field_values, array($id => $val), ...$extra);
         if ($err != null) {return $err;}
 
@@ -467,10 +471,10 @@ class Model extends Crud
         if (empty($this->Storage)) {
             return new Gerror(2013);
         }
-        $p = $this->Storage[$model];
-        if (empty($p)) {
+        if (empty($this->Storage[$model])) {
             return new Gerror(2014, $model);
         }
+        $p = clone $this->Storage[$model];
 
         $action = $page["action"];
         $marker = $model . "_" . $action;
@@ -499,7 +503,7 @@ class Model extends Crud
 
         $lists = array();
         $other = array();
-        $p->Set_defaults($args, $lists, $other, $this->Storage);
+        $p->Set_defaults($args, $lists, $other, $this->Storage, $this->logger);
         $err = $p->$action(...$extra);
         if ($err !== null) {return $err;}
         if (!empty($p->LISTS)) {
