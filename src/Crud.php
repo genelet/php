@@ -1,5 +1,6 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
 
 namespace Genelet;
 
@@ -47,7 +48,9 @@ class Crud extends Dbi
         } else {
             $i = 0;
             foreach ($select_pars as $k => $val) {
-                if ($i > 0) {$sql .= ", ";}
+                if ($i > 0) {
+                    $sql .= ", ";
+                }
                 $sql .= $k;
                 array_push($select_labels, $val);
                 $i++;
@@ -59,13 +62,17 @@ class Crud extends Dbi
 
     public function Select_condition_string(array $extra, string ...$table): array
     {
-        if (empty($extra)) {return array("");}
+        if (empty($extra)) {
+            return array("");
+        }
 
         $sql = "";
         $values = array();
         $i = 0;
         foreach ($extra as $field => $value) {
-            if ($i > 0) {$sql .= " AND ";}
+            if ($i > 0) {
+                $sql .= " AND ";
+            }
             $sql .= "(";
 
             if (isset($table[0]) && (strpos($field, ".") === false)) {
@@ -112,7 +119,7 @@ class Crud extends Dbi
                 array_push($extra_values, $val);
             }
             $sql .= ")";
-			$i++;
+            $i++;
         }
 
         if (!empty($extra)) {
@@ -169,7 +176,9 @@ class Crud extends Dbi
         $sql = "UPDATE " . $this->Current_table . " SET " . implode(", ", $field0);
         if (!empty($empties)) {
             foreach ($empties as $v) {
-                if (isset($field_values[$v])) {continue;}
+                if (isset($field_values[$v])) {
+                    continue;
+                }
                 $found = false;
                 foreach ($keyids as $keyname => $ids) {
                     if ($v === $keyname) {
@@ -177,7 +186,9 @@ class Crud extends Dbi
                         break;
                     }
                 }
-                if ($found === true) {continue;}
+                if ($found === true) {
+                    continue;
+                }
                 $sql .= ", " . $v . "=NULL";
             }
         }
@@ -197,25 +208,35 @@ class Crud extends Dbi
         $s = "SELECT " . $keyname . " FROM " . $this->Current_table . "\nWHERE ";
         $v = array();
         foreach ($uniques as $i => $val) {
-            if ($i > 0) {$s .= " AND ";}
+            if ($i > 0) {
+                $s .= " AND ";
+            }
             $s .= $val . "=?";
             array_push($v, $field_values[$val]);
         }
 
         $lists = array();
         $err = $this->Select_sql($lists, $s, ...$v);
-        if ($err != null) {return $err;}
-        if (sizeof($lists) > 1) {return new Gerror(1070);}
+        if ($err != null) {
+            return $err;
+        }
+        if (sizeof($lists) > 1) {
+            return new Gerror(1070);
+        }
 
         if (sizeof($lists) === 1) {
             $id = $lists[0][$keyname];
             $err = $this->Update_hash($field_values, array($keyname => $id));
-            if ($err != null) {return $err;}
+            if ($err != null) {
+                return $err;
+            }
             $s_hash = "update";
             $field_values[$keyname] = $id;
         } else {
             $err = $this->Insert_hash($field_values);
-            if ($err != null) {return $err;}
+            if ($err != null) {
+                return $err;
+            }
             $s_hash = "insert";
             $field_values[$keyname] = $this->Last_id;
         }
@@ -229,15 +250,21 @@ class Crud extends Dbi
         $s = "SELECT " . implode(", ", $ks) . " FROM " . $this->Current_table . "\nWHERE ";
         $v = array();
         foreach ($uniques as $i => $val) {
-            if ($i > 0) {$s .= " AND ";}
+            if ($i > 0) {
+                $s .= " AND ";
+            }
             $s .= $val . "=?";
             array_push($v, $field_values[$val]);
         }
 
         $lists = array();
         $err = $this->Select_sql($lists, $s, ...$v);
-        if ($err != null) {return $err;}
-        if (sizeof($lists) > 1) {return new Gerror(1070);}
+        if ($err != null) {
+            return $err;
+        }
+        if (sizeof($lists) > 1) {
+            return new Gerror(1070);
+        }
 
         if (sizeof($lists) === 1) {
             $ids = array_fill(0, sizeof($ks), "");
@@ -248,11 +275,15 @@ class Crud extends Dbi
                 $keyids[$k] = $ids;
             }
             $err = $this->Update_hash($field_values, $keyids);
-            if ($err != null) {return $err;}
+            if ($err != null) {
+                return $err;
+            }
             $s_hash = "update";
         } else {
             $err = $this->Insert_hash($field_values);
-            if ($err != null) {return $err;}
+            if ($err != null) {
+                return $err;
+            }
             $s_hash = "insert";
         }
 
@@ -339,5 +370,4 @@ class Crud extends Dbi
 
         return $this->Get_sql_label($hash, array($label), $sql);
     }
-
 }

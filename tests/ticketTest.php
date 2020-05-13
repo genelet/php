@@ -1,5 +1,7 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Genelet\Tests;
 
 use PHPUnit\Framework\TestCase;
@@ -80,7 +82,7 @@ final class TicketTest extends TestCase
         $_SERVER["REMOTE_ADDR"] = "192.168.29.30";
         $err = $ticket->Handler();
         $this->assertNull($err);
-		$fields = $ticket->Get_fields();
+        $fields = $ticket->Get_fields();
         $this->assertEquals($fields[0], "hello");
         $this->assertEquals($fields[1], "db");
     }

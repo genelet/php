@@ -1,5 +1,7 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Genelet\Tests;
 
 use PHPUnit\Framework\TestCase;
@@ -34,13 +36,13 @@ final class Oauth2Test extends TestCase
             "https://aaa.bbb.com/bb/m/json/github",
             $proc->Callback_address()
         );
-		$this->assertEquals($proc->Defaults["authorize_url"], "https://github.com/login/oauth/authorize");
-		$err = $proc->Build_authorize("1");
-		$this->assertEquals($err->error_code, 303);
-		$this->assertEquals($proc->Uri, "https://github.com/login/oauth/authorize?client_id=1111111111111111&redirect_uri=http%3A%2F%2Fsandy%2Fapp.php%2Fa%2Fhtml%2Fgithub&scope=repo_deployment%2Crepo%3Ainvite%2Cread%3Auser%2Cuser%3Aemail&state=1&response_type=code");
+        $this->assertEquals($proc->Defaults["authorize_url"], "https://github.com/login/oauth/authorize");
+        $err = $proc->Build_authorize("1");
+        $this->assertEquals($err->error_code, 303);
+        $this->assertEquals($proc->Uri, "https://github.com/login/oauth/authorize?client_id=1111111111111111&redirect_uri=http%3A%2F%2Fsandy%2Fapp.php%2Fa%2Fhtml%2Fgithub&scope=repo_deployment%2Crepo%3Ainvite%2Cread%3Auser%2Cuser%3Aemail&state=1&response_type=code");
     }
 
-/*
+    /*
     public function testOauth2Authenticate(): void
     {
         $conf = new Config(json_decode(file_get_contents("conf/test.conf")));

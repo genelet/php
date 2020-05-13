@@ -1,5 +1,6 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
 
 namespace Genelet;
 
@@ -11,7 +12,8 @@ class Chartag
 	public $logged;
 	public $logout;
 	public $failed;
-	public function __construct(object $t) {
+	public function __construct(object $t)
+	{
 		$this->content_type = $t->{"Content_type"};
 		$this->case = isset($t->{"Case"}) ? $t->{"Case"} : 0;
 		if ($this->case > 0) {
@@ -23,7 +25,8 @@ class Chartag
 	}
 }
 
-class Condition {
+class Condition
+{
 	public $marker;
 	public $leading;
 	public $component;
@@ -59,7 +62,7 @@ class Issuer
 		}
 		$this->provider_pars = array();
 		if (isset($issuer->{"Provider_pars"})) {
-			foreach ($issuer->{"Provider_pars"} as $k=>$v) {
+			foreach ($issuer->{"Provider_pars"} as $k => $v) {
 				$this->provider_pars[$k] = $v;
 			}
 		}
@@ -84,7 +87,8 @@ class Issuer
 	}
 }
 
-class Role {
+class Role
+{
 	public $idname;
 	public $is_admin;
 	public $attributes;
@@ -122,7 +126,7 @@ class Role {
 			}
 		}
 		$this->issuers = array();
-		foreach ($role->{"Issuers"} as $k=>$issuer) {
+		foreach ($role->{"Issuers"} as $k => $issuer) {
 			$this->issuers[$k] = new Issuer($issuer);
 		}
 	}
@@ -161,7 +165,8 @@ class Config
 	protected $json_url_name;
 	protected $loginas_name;
 
-	public function __construct(object $c) {
+	public function __construct(object $c)
+	{
 		$this->original = $c;
 		$this->project = $c->{"Project"};
 		$this->server_url = isset($c->{"Server_url"}) ? $c->{"Server_url"} : "/";
@@ -187,7 +192,7 @@ class Config
 		$c_txt  = new Chartag(json_decode('{"Content_type":"text/plain; charset=\"UTF-8\""}'));
 		$c_xml = new Chartag(json_decode('{"Content_type":"application/xml; charset=\"UTF-8\"", "Challenge":"challenge", "Logged":"logged", "Logout":"logout", "Failed":"failed", "Case":2}'));
 		$c_json  = new Chartag(json_decode('{"Content_type":"application/json; charset=\"UTF-8\"", "Challenge":"challenge", "Logged":"logged", "Logout":"logout", "Failed":"failed", "Case":1}'));
-		$this->chartags = array("html"=>$c_html, "json"=>$c_json, "xml"=>$c_xml, "csv"=>$c_csv, "pdf"=>$c_pdf, "txt"=>$c_txt);
+		$this->chartags = array("html" => $c_html, "json" => $c_json, "xml" => $c_xml, "csv" => $c_csv, "pdf" => $c_pdf, "txt" => $c_txt);
 		if (isset($c->{"Chartags"})) {
 			foreach ($c->{"Chartags"} as $short => $tag) {
 				$this->chartags[$short] = new Chartag($tag);
@@ -197,8 +202,8 @@ class Config
 		foreach ($c->{"Roles"} as $short => $role) {
 			$this->roles[$short] = new Role($role);
 		}
-		$this->ttl = isset($c->{"Ttl"}) ? $c->{"Ttl"} : 30*24*3600;
-		$this->default_actions = array("GET"=>"dashboard", "GET_item"=>"edit", "PUT"=>"update", "POST"=>"insert", "DELETE"=>"delete");
+		$this->ttl = isset($c->{"Ttl"}) ? $c->{"Ttl"} : 30 * 24 * 3600;
+		$this->default_actions = array("GET" => "dashboard", "GET_item" => "edit", "PUT" => "update", "POST" => "insert", "DELETE" => "delete");
 		if (isset($c->{"Default_actions"})) {
 			foreach ($c->{"Default_actions"} as $k => $v) {
 				$this->default_actions[$k] = $v;
@@ -218,7 +223,7 @@ class Config
 				array_push($this->oauth1s, $k);
 			}
 		}
-		
+
 		$this->action_name = isset($c->{"Action_name"}) ? $c->{"Action_name"} : "action";
 		$this->provider_name = isset($c->{"Provider_name"}) ? $c->{"Provider_name"} : "provider";
 		$this->go_uri_name = isset($c->{"Go_uri_name"}) ? $c->{"Go_uri_name"} : "go_uri";
@@ -230,27 +235,33 @@ class Config
 		$this->cache_url_name = isset($c->{"CacheURL_name"}) ? $c->{"CacheURL_name"} : "cache_url";
 		$this->json_url_name = isset($c->{"JsonURL_name"}) ? $c->{"JsonURL_name"} : "json_url";
 		$this->loginas_name = isset($c->{"Loginas_name"}) ? $c->{"Loginas_name"} : "loginas";
-    }
-	protected function Is_oauth2(string $name) : bool {
+	}
+	protected function Is_oauth2(string $name): bool
+	{
 		return array_search($name, $this->oauth2s) !== false;
 	}
-	protected function Is_oauth1(string $name) : bool {
+	protected function Is_oauth1(string $name): bool
+	{
 		return array_search($name, $this->oauth1s) !== false;
 	}
-	protected function Is_login(string $name) : bool {
+	protected function Is_login(string $name): bool
+	{
 		return $this->login_name == $name;
 	}
-	protected function Is_loginas(string $name) : bool {
+	protected function Is_loginas(string $name): bool
+	{
 		return $this->loginas_name == $name;
 	}
-	protected function Is_logout(string $name) : bool {
+	protected function Is_logout(string $name): bool
+	{
 		return $this->logout_name == $name;
 	}
-    protected function Is_json_tag(string $tag_name) : bool {
-        if (empty($this->chartags[$tag_name])) {
-            return false;
-        }
-        $chartag = $this->chartags[$tag_name];
-        return $chartag->case == 1;
-    }
+	protected function Is_json_tag(string $tag_name): bool
+	{
+		if (empty($this->chartags[$tag_name])) {
+			return false;
+		}
+		$chartag = $this->chartags[$tag_name];
+		return $chartag->case == 1;
+	}
 }

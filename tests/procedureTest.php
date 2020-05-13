@@ -1,5 +1,7 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Genelet\Tests;
 
 use PHPUnit\Framework\TestCase;
@@ -41,25 +43,36 @@ final class ProcedureTest extends TestCase
         $conf = new Config(json_decode(file_get_contents("conf/test.conf")));
         $dbi = new Dbi(new \PDO(...$conf->db));
         $err = $dbi->Exec_sql(
-            "drop table if exists testing_f");
+            "drop table if exists testing_f"
+        );
         $this->assertNull($err);
         $err = $dbi->Exec_sql(
-            "drop table if exists testing");
+            "drop table if exists testing"
+        );
         $this->assertNull($err);
         $err = $dbi->Exec_sql(
-            "create table testing (autoid int not null auto_increment, id int not null, x varchar(255), primary key (autoid)) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            "create table testing (autoid int not null auto_increment, id int not null, x varchar(255), primary key (autoid)) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+        );
         $this->assertNull($err);
         $err = $dbi->Do_sql(
-            "INSERT INTO testing (id, x) VALUES (?,?)", 1, "aaa");
+            "INSERT INTO testing (id, x) VALUES (?,?)",
+            1,
+            "aaa"
+        );
         $this->assertNull($err);
         $err = $dbi->Do_sqls(
-            "INSERT INTO testing (id, x) VALUES (?,?)", array(2, "bbb"), array(3, "ccc"));
+            "INSERT INTO testing (id, x) VALUES (?,?)",
+            array(2, "bbb"),
+            array(3, "ccc")
+        );
         $this->assertNull($err);
         $err = $dbi->Exec_sql(
-            "drop procedure if exists test_proc");
+            "drop procedure if exists test_proc"
+        );
         $this->assertNull($err);
         $err = $dbi->Exec_sql(
-            "drop procedure if exists test_proc_as");
+            "drop procedure if exists test_proc_as"
+        );
         $this->assertNull($err);
         $err = $dbi->Exec_sql(
             "CREATE PROCEDURE test_proc(
@@ -75,7 +88,8 @@ OUT company varchar(255)
 BEGIN
     SELECT x, autoid, 'f', 'l', 'a', 'c' INTO email, m_id, first_name, last_name, address, company FROM testing WHERE id=idd and x=xx;
 END
-");
+"
+        );
         $this->assertNull($err);
         $err = $dbi->Exec_sql(
             "CREATE PROCEDURE test_proc_as(
@@ -90,12 +104,16 @@ OUT company varchar(255)
 BEGIN
     SELECT x, autoid, 'f', 'l', 'a', 'c' INTO email, m_id, first_name, last_name, address, company FROM testing WHERE id=idd;
 END
-");
+"
+        );
         $this->assertNull($err);
 
         $proc = new Procedure($dbi, "/bb/m/e/comp?action=act", json_decode(file_get_contents("conf/test.conf")), "m", "json", "db");
         $err = $proc->Run_sql(
-            "SELECT x, autoid, 'ff', 'll', 'aa', 'cc' FROM testing WHERE id=? and x=?", 3, "ccc");
+            "SELECT x, autoid, 'ff', 'll', 'aa', 'cc' FROM testing WHERE id=? and x=?",
+            3,
+            "ccc"
+        );
         $this->assertNull($err);
         $hash = $proc->Out_hash;
         $this->assertEquals("ccc", $hash["email"]);

@@ -1,5 +1,7 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Genelet\Tests;
 
 use PHPUnit\Framework\TestCase;
@@ -39,16 +41,20 @@ final class ModelTest extends TestCase
         $pdo = new \PDO(...$conf->db);
         $model = new Model($pdo, self::init());
         $err = $model->Exec_sql(
-            "drop table if exists testing_f");
+            "drop table if exists testing_f"
+        );
         $this->assertNull($err);
         $err = $model->Exec_sql(
-            "drop table if exists testing");
+            "drop table if exists testing"
+        );
         $this->assertNull($err);
         $err = $model->Exec_sql(
-            "create table testing (id int not null auto_increment, x varchar(255), y varchar(255), z varchar(255) default null, primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            "create table testing (id int not null auto_increment, x varchar(255), y varchar(255), z varchar(255) default null, primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+        );
         $this->assertNull($err);
         $err = $model->Exec_sql(
-            "create table testing_f (fid int not null auto_increment, id int not null, a varchar(255), primary key (fid), foreign key (id) references testing (id) on delete cascade) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            "create table testing_f (fid int not null auto_increment, id int not null, a varchar(255), primary key (fid), foreign key (id) references testing (id) on delete cascade) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+        );
         $this->assertNull($err);
         $args = ["id" => 1, "x" => "aaa", "y" => "bbb", "fields" => ["id", "x", "y", "z"]];
         $lists = array();
@@ -72,7 +78,13 @@ final class ModelTest extends TestCase
         $this->assertEmpty($ret);
 
         $err = $model->Do_sqls(
-            "INSERT INTO testing (x,y,z) VALUES (?,?,?)", array("aaa", "zzz", "1"), array("bbb", "yyy", "1"), array("ccc", "xxx", "1"), array("ddd", "www", "1"), array("eee", "vvv", "1"));
+            "INSERT INTO testing (x,y,z) VALUES (?,?,?)",
+            array("aaa", "zzz", "1"),
+            array("bbb", "yyy", "1"),
+            array("ccc", "xxx", "1"),
+            array("ddd", "www", "1"),
+            array("eee", "vvv", "1")
+        );
         $this->assertNull($err);
         $err = $model->existing("testing", "id", 1);
         $this->assertIsObject($err);
@@ -148,11 +160,19 @@ final class ModelTest extends TestCase
         $this->assertEquals(2, sizeof($model->LISTS));
 
         $err = $model->Do_sqls(
-            "INSERT INTO testing_f (id,a) VALUES (?,?)", array(1, "111"), array(2, "222"), array(3, "333"), array(4, "444"), array(6, "666"), array(7, "777"));
+            "INSERT INTO testing_f (id,a) VALUES (?,?)",
+            array(1, "111"),
+            array(2, "222"),
+            array(3, "333"),
+            array(4, "444"),
+            array(6, "666"),
+            array(7, "777")
+        );
         $this->assertNull($err);
         $model->Current_tables = [
             ["name" => "testing", "alias" => "t"],
-            ["name" => "testing_f", "alias" => "f", "type" => "inner", "using" => "id"]];
+            ["name" => "testing_f", "alias" => "f", "type" => "inner", "using" => "id"]
+        ];
         $model->Topics_hashpars = ["t.id" => "id", "t.x" => "x", "t.y" => "y", "t.z" => "z", "f.a" => "a"];
         $model->LISTS = [];
         $err = $model->topics();
@@ -217,43 +237,62 @@ final class ModelTest extends TestCase
         $pdo = new \PDO(...$conf->db);
         $model = new Model($pdo, self::init2());
         $t  = new Model($pdo, self::init2());
-		$tf = new Model($pdo, self::init3());
-		$storage = ["t"=>$t, "tf"=>$tf];
+        $tf = new Model($pdo, self::init3());
+        $storage = ["t" => $t, "tf" => $tf];
 
         $err = $model->Exec_sql(
-            "drop table if exists testing_f");
+            "drop table if exists testing_f"
+        );
         $this->assertNull($err);
         $err = $model->Exec_sql(
-            "drop table if exists testing");
+            "drop table if exists testing"
+        );
         $this->assertNull($err);
         $err = $model->Exec_sql(
-            "create table testing (id int not null auto_increment, x varchar(255), y varchar(255), z varchar(255) default null, primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            "create table testing (id int not null auto_increment, x varchar(255), y varchar(255), z varchar(255) default null, primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+        );
         $this->assertNull($err);
         $err = $model->Exec_sql(
-            "create table testing_f (fid int not null auto_increment, id int not null, a varchar(255), primary key (fid), foreign key (id) references testing (id) on delete cascade) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            "create table testing_f (fid int not null auto_increment, id int not null, a varchar(255), primary key (fid), foreign key (id) references testing (id) on delete cascade) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+        );
         $this->assertNull($err);
 
         $args = [];
-		$lists = array();
+        $lists = array();
         $other = array();
         $model->Set_defaults($args, $lists, $other, $storage);
-		$err = $model->Do_sqls(
-"INSERT INTO testing (x,y,z) VALUES (?,?,?)", array("aaa", "zzz", "1"), array("bbb", "yyy", "1"), array("ccc", "xxx", "1"), array("ddd", "www", "1"), array("eee", "vvv", "1"));
+        $err = $model->Do_sqls(
+            "INSERT INTO testing (x,y,z) VALUES (?,?,?)",
+            array("aaa", "zzz", "1"),
+            array("bbb", "yyy", "1"),
+            array("ccc", "xxx", "1"),
+            array("ddd", "www", "1"),
+            array("eee", "vvv", "1")
+        );
         $this->assertNull($err);
-		$err = $model->Do_sqls(
-"INSERT INTO testing_f (id,a) VALUES (?,?)", array(1, "11"), array(1, "111"), array(2, "22"), array(2, "222"), array(3, "33"), array(3, "333"), array(4, "444"), array(5, "555"));
+        $err = $model->Do_sqls(
+            "INSERT INTO testing_f (id,a) VALUES (?,?)",
+            array(1, "11"),
+            array(1, "111"),
+            array(2, "22"),
+            array(2, "222"),
+            array(3, "33"),
+            array(3, "333"),
+            array(4, "444"),
+            array(5, "555")
+        );
         $this->assertNull($err);
         $err = $model->topics();
         $this->assertNull($err);
-		$this->assertEquals(8, sizeof($model->LISTS));
-		$items = $model->LISTS[4]["tf_topics"];
-		$this->assertEquals(5, $items[0]["fid"]);
-		$this->assertEquals(3, $items[0]["id"]);
-		$this->assertEquals("33", $items[0]["a"]);
-		$this->assertEquals(6, $items[1]["fid"]);
-		$this->assertEquals(3, $items[1]["id"]);
-		$this->assertEquals("333", $items[1]["a"]);
-		$items = $model->LISTS[7]["tf_topics"];
-		$this->assertEquals(1, sizeof($items));
-	}
+        $this->assertEquals(8, sizeof($model->LISTS));
+        $items = $model->LISTS[4]["tf_topics"];
+        $this->assertEquals(5, $items[0]["fid"]);
+        $this->assertEquals(3, $items[0]["id"]);
+        $this->assertEquals("33", $items[0]["a"]);
+        $this->assertEquals(6, $items[1]["fid"]);
+        $this->assertEquals(3, $items[1]["id"]);
+        $this->assertEquals("333", $items[1]["a"]);
+        $items = $model->LISTS[7]["tf_topics"];
+        $this->assertEquals(1, sizeof($items));
+    }
 }

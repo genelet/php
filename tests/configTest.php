@@ -1,5 +1,7 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Genelet\Tests;
 
 use PHPUnit\Framework\TestCase;
@@ -52,7 +54,7 @@ final class ConfigTest extends TestCase
             360000,
             $g->roles["m"]->duration
         );
-		$issuers = $g->roles["m"]->issuers;
+        $issuers = $g->roles["m"]->issuers;
         $this->assertEquals(
             "email",
             $issuers["db"]->credential[0]

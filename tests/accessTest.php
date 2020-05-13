@@ -1,5 +1,7 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Genelet\Tests;
 
 use PHPUnit\Framework\TestCase;
@@ -15,18 +17,18 @@ final class AccessTest extends TestCase
         );
     }
 
-	public function testAccessDigest(): void
-	{
+    public function testAccessDigest(): void
+    {
         $access = new Access(json_decode(file_get_contents("conf/test.conf")), "m", "json");
-		$access->Endtime = 88888;
-		$stamp = 123456;
-		$str = "sdfdsgfsdgd";
-		$token = $access->Token($stamp, $str);
-		$this->assertEquals($stamp, Access::Get_tokentime($token));
-		$stamp = 4294967295;
-		$token = $access->Token($stamp, $str);
-		$this->assertEquals($stamp, Access::Get_tokentime($token));
-	}
+        $access->Endtime = 88888;
+        $stamp = 123456;
+        $str = "sdfdsgfsdgd";
+        $token = $access->Token($stamp, $str);
+        $this->assertEquals($stamp, Access::Get_tokentime($token));
+        $stamp = 4294967295;
+        $token = $access->Token($stamp, $str);
+        $this->assertEquals($stamp, Access::Get_tokentime($token));
+    }
 
     public function testAccessSetip(): void
     {
@@ -48,7 +50,7 @@ final class AccessTest extends TestCase
         $s = $access->Signature($fields);
         $a = $access->Verify_cookie($s);
         $this->assertNull($a);
-		$ref = $access->Raw;
+        $ref = $access->Raw;
         $this->assertEquals("192.168.29.30", $ref[0]);
         $this->assertEquals("aaaaa", $ref[1]);
         $this->assertEquals("bbbbb|ccccc|ddddd|eeeee", $ref[2]);
@@ -82,7 +84,7 @@ final class AccessTest extends TestCase
         $_COOKIE["mc"] .= "21";
         $err = $gate->Verify_cookie();
         $this->assertIsObject($err);
-		$str = $gate->Forbid();
+        $str = $gate->Forbid();
         $this->assertEquals("/bb/m/e/login?go_uri=%2Fbb%2Fm%2Fe%2Fcomp%3Faction%3Dact&go_err=1025&provider=db", $str);
     }
 
@@ -97,7 +99,7 @@ final class AccessTest extends TestCase
         $fields = array("aaaaaemail", 11111, "bbbbbfirst", "ccccclast", "dddddaddr", "eeeeecomp");
         $s = $gate->Signature($fields);
         $_COOKIE["mc"] = $s;
-		$err = $gate->Verify_cookie($s);
+        $err = $gate->Verify_cookie($s);
         $this->assertNull($err);
         $ref = $gate->Decoded;
         $this->assertEquals($fields[0], $ref["email"]);
@@ -107,5 +109,4 @@ final class AccessTest extends TestCase
         $this->assertEquals($fields[4], $ref["address"]);
         $this->assertEquals($fields[5], $ref["company"]);
     }
-
 }

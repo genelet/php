@@ -1,5 +1,7 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Genelet\Tests;
 
 use PHPUnit\Framework\TestCase;
@@ -24,13 +26,16 @@ final class CrudTest extends TestCase
         $pdo = new \PDO(...$conf->db);
         $crud = new Crud($pdo, "testing");
         $err = $crud->Exec_sql(
-            "drop table if exists testing_f");
+            "drop table if exists testing_f"
+        );
         $this->assertNull($err);
         $err = $crud->Exec_sql(
-            "drop table if exists testing");
+            "drop table if exists testing"
+        );
         $this->assertNull($err);
         $err = $crud->Exec_sql(
-            "create table testing (id int not null, x varchar(255), primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            "create table testing (id int not null, x varchar(255), primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+        );
         $this->assertNull($err);
     }
 
@@ -91,19 +96,28 @@ final class CrudTest extends TestCase
         $crud = new Crud($pdo, "testing");
 
         $err = $crud->Exec_sql(
-            "drop table if exists testing_f");
+            "drop table if exists testing_f"
+        );
         $this->assertNull($err);
         $err = $crud->Exec_sql(
-            "drop table if exists testing");
+            "drop table if exists testing"
+        );
         $this->assertNull($err);
         $err = $crud->Exec_sql(
-            "create table testing (id int not null, x varchar(255), primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            "create table testing (id int not null, x varchar(255), primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+        );
         $this->assertNull($err);
         $err = $crud->Do_sql(
-            "INSERT INTO testing (id, x) VALUES (?,?)", 1, "aaa");
+            "INSERT INTO testing (id, x) VALUES (?,?)",
+            1,
+            "aaa"
+        );
         $this->assertNull($err);
         $err = $crud->Do_sqls(
-            "INSERT INTO testing (id, x) VALUES (?,?)", array(2, "bbb"), array(3, "ccc"));
+            "INSERT INTO testing (id, x) VALUES (?,?)",
+            array(2, "bbb"),
+            array(3, "ccc")
+        );
         $this->assertNull($err);
 
         $field_values = array("id" => 4, "x" => "ddd");
@@ -117,19 +131,28 @@ final class CrudTest extends TestCase
         $this->assertNull($err);
 
         $err = $crud->Exec_sql(
-            "drop table if exists testing_f");
+            "drop table if exists testing_f"
+        );
         $this->assertNull($err);
         $err = $crud->Exec_sql(
-            "drop table if exists testing");
+            "drop table if exists testing"
+        );
         $this->assertNull($err);
         $err = $crud->Exec_sql(
-            "create table testing (id int not null, x varchar(255), y varchar(255) default null, primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            "create table testing (id int not null, x varchar(255), y varchar(255) default null, primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+        );
         $this->assertNull($err);
         $err = $crud->Do_sql(
-            "INSERT INTO testing (id, x) VALUES (?,?)", 1, "aaa");
+            "INSERT INTO testing (id, x) VALUES (?,?)",
+            1,
+            "aaa"
+        );
         $this->assertNull($err);
         $err = $crud->Do_sqls(
-            "INSERT INTO testing (id, x) VALUES (?,?)", array(2, "bbb"), array(3, "ccc"));
+            "INSERT INTO testing (id, x) VALUES (?,?)",
+            array(2, "bbb"),
+            array(3, "ccc")
+        );
         $this->assertNull($err);
         $field_values = array("id" => 4, "x" => "ddd", "y" => "yyy");
         $err = $crud->Insert_hash($field_values);
@@ -145,16 +168,25 @@ final class CrudTest extends TestCase
         $this->assertNull($err);
 
         $err = $crud->Exec_sql(
-            "drop table if exists testing_f");
+            "drop table if exists testing_f"
+        );
         $this->assertNull($err);
         $err = $crud->Exec_sql(
-            "drop table if exists testing");
+            "drop table if exists testing"
+        );
         $this->assertNull($err);
         $err = $crud->Exec_sql(
-            "create table testing (id int not null auto_increment, x varchar(255), y varchar(255) default null, primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            "create table testing (id int not null auto_increment, x varchar(255), y varchar(255) default null, primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+        );
         $this->assertNull($err);
         $err = $crud->Do_sqls(
-            "INSERT INTO testing (x,y) VALUES (?,?)", array("aaa", "zzz"), array("bbb", "yyy"), array("ccc", "xxx"), array("ddd", "www"), array("eee", "vvv"));
+            "INSERT INTO testing (x,y) VALUES (?,?)",
+            array("aaa", "zzz"),
+            array("bbb", "yyy"),
+            array("ccc", "xxx"),
+            array("ddd", "www"),
+            array("eee", "vvv")
+        );
         $this->assertNull($err);
         $field_values = array("x" => "fff", "y" => "uuu");
         $which = "";
@@ -167,16 +199,25 @@ final class CrudTest extends TestCase
         $this->assertEquals("update", $which);
 
         $err = $crud->Exec_sql(
-            "drop table if exists testing_f");
+            "drop table if exists testing_f"
+        );
         $this->assertNull($err);
         $err = $crud->Exec_sql(
-            "drop table if exists testing");
+            "drop table if exists testing"
+        );
         $this->assertNull($err);
         $err = $crud->Exec_sql(
-            "create table testing (id int not null auto_increment, x varchar(255), y varchar(255), z varchar(255) default null, primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            "create table testing (id int not null auto_increment, x varchar(255), y varchar(255), z varchar(255) default null, primary key (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+        );
         $this->assertNull($err);
         $err = $crud->Do_sqls(
-            "INSERT INTO testing (x,y,z) VALUES (?,?,?)", array("aaa", "zzz", "1"), array("bbb", "yyy", "1"), array("ccc", "xxx", "1"), array("ddd", "www", "1"), array("eee", "vvv", "1"));
+            "INSERT INTO testing (x,y,z) VALUES (?,?,?)",
+            array("aaa", "zzz", "1"),
+            array("bbb", "yyy", "1"),
+            array("ccc", "xxx", "1"),
+            array("ddd", "www", "1"),
+            array("eee", "vvv", "1")
+        );
         $this->assertNull($err);
         $field_values = array("x" => "fff", "y" => "uuu", "z" => "2");
         $which = "";
@@ -240,19 +281,29 @@ final class CrudTest extends TestCase
         $this->assertEquals(2, sizeof($lists));
 
         $err = $crud->Exec_sql(
-            "drop table if exists testing_f");
+            "drop table if exists testing_f"
+        );
         $this->assertNull($err);
         $err = $crud->Exec_sql(
-            "create table testing_f (fid int not null auto_increment, id int not null, a varchar(255), primary key (fid), foreign key (id) references testing (id) on delete cascade) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            "create table testing_f (fid int not null auto_increment, id int not null, a varchar(255), primary key (fid), foreign key (id) references testing (id) on delete cascade) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+        );
         $this->assertNull($err);
         $err = $crud->Do_sqls(
-            "INSERT INTO testing_f (id,a) VALUES (?,?)", array(1, "111"), array(2, "222"), array(3, "333"), array(4, "444"), array(6, "666"), array(7, "777"));
+            "INSERT INTO testing_f (id,a) VALUES (?,?)",
+            array(1, "111"),
+            array(2, "222"),
+            array(3, "333"),
+            array(4, "444"),
+            array(6, "666"),
+            array(7, "777")
+        );
         $this->assertNull($err);
         $lists = array();
         $select_pars = array("t.id" => "id", "t.x" => "x", "t.y" => "y", "t.z" => "z", "f.a" => "a");
         $crud->Current_tables = array(
             array("name" => "testing", "alias" => "t"),
-            array("name" => "testing_f", "alias" => "f", "type" => "inner", "using" => "id"));
+            array("name" => "testing_f", "alias" => "f", "type" => "inner", "using" => "id")
+        );
         $err = $crud->Topics_hash($lists, $select_pars, "");
         $this->assertNull($err);
         $this->assertEquals(6, sizeof($lists));

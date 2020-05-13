@@ -1,5 +1,6 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
 
 namespace Genelet;
 
@@ -7,30 +8,31 @@ class Ticket extends Access
 {
     public $Uri;
     public $Out_hash; #map[string]interface{}
-	public $Provider;
+    public $Provider;
 
-	private $basic;
+    private $basic;
 
-    public function __construct(string $uri=null, object $c, string $r, string $t, string $p = null)
+    public function __construct(string $uri = null, object $c, string $r, string $t, string $p = null)
     {
         $this->Uri = $uri;
         parent::__construct($c, $r, $t);
-		$this->Provider = ($p === null) ? $this->Get_provider() : $p;
-		$this->basic = false;
+        $this->Provider = ($p === null) ? $this->Get_provider() : $p;
+        $this->basic = false;
     }
 
-	protected function probe_value(string $input=null) : string {
-		if (isset($_REQUEST[$this->go_uri_name])) {
-			return $_REQUEST[$this->go_uri_name];
-		}
-		foreach (explode("&", parse_url($_SERVER["REQUEST_URI"], PHP_URL_QUERY)) as $item) {
-			$len = strlen($this->go_uri_name);
-			if (substr($item, 0, $len+1) === $this->go_uri_name."=") {
-				return urldecode(substr($item, $len+1));
-			}
-		}
-		return isset($input) ? $input : "/";
-	}
+    protected function probe_value(string $input = null): string
+    {
+        if (isset($_REQUEST[$this->go_uri_name])) {
+            return $_REQUEST[$this->go_uri_name];
+        }
+        foreach (explode("&", parse_url($_SERVER["REQUEST_URI"], PHP_URL_QUERY)) as $item) {
+            $len = strlen($this->go_uri_name);
+            if (substr($item, 0, $len + 1) === $this->go_uri_name . "=") {
+                return urldecode(substr($item, $len + 1));
+            }
+        }
+        return isset($input) ? $input : "/";
+    }
 
     public function Basic(): ?Gerror
     {
@@ -38,17 +40,17 @@ class Ticket extends Access
         $cred = $issuer->credential;
 
         $user = $_REQUEST[$cred[0]];
-        if(!empty($_SERVER['PHP_AUTH_USER'])) {
+        if (!empty($_SERVER['PHP_AUTH_USER'])) {
             $user = $_SERVER['PHP_AUTH_USER'];
             $this->basic = true;
         }
         $pw = $_REQUEST[$cred[1]];
-        if(!empty($_SERVER['PHP_AUTH_PW'])) {
+        if (!empty($_SERVER['PHP_AUTH_PW'])) {
             $pw = $_SERVER['PHP_AUTH_PW'];
             $this->basic = true;
         }
 
-        if(empty($user) && empty($pw)) {
+        if (empty($user) && empty($pw)) {
             return new Gerror(1026);
         }
 
@@ -58,16 +60,17 @@ class Ticket extends Access
         }
 
         $attrs = $this->role_obj->attributes;
-		if (empty($this->Out_hash[$attrs[0]])) {
-			return new Gerror(1032);
-		}
+        if (empty($this->Out_hash[$attrs[0]])) {
+            return new Gerror(1032);
+        }
 
- 		return null;
-	}
+        return null;
+    }
 
-    public function IsBasic(): bool {
-		return $this->basic;
-	}
+    public function IsBasic(): bool
+    {
+        return $this->basic;
+    }
 
     public function Handler(): ?Gerror
     {
@@ -91,43 +94,43 @@ class Ticket extends Access
         if (empty($_REQUEST[$cred[0]]) && empty($_REQUEST[$cred[1]])) {
             return new Gerror(1026);
         } elseif (empty($_REQUEST[$cred[0]])) {
-			$_REQUEST[$cred[0]] = null;
-		} elseif (empty($_REQUEST[$cred[1]])) {
-			$_REQUEST[$cred[1]] = null;
-		}
+            $_REQUEST[$cred[0]] = null;
+        } elseif (empty($_REQUEST[$cred[1]])) {
+            $_REQUEST[$cred[1]] = null;
+        }
 
-// Credential = [code, error] MUST be for oauth
+        // Credential = [code, error] MUST be for oauth
         $err = $this->Authenticate($_REQUEST[$cred[0]], $_REQUEST[$cred[1]]);
         if ($err != null) {
             return $err;
         }
 
         $attrs = $this->role_obj->attributes;
-		if (empty($this->Out_hash[$attrs[0]])) {
-			return new Gerror(1032);
-		}
-
-		return null;
-	}
-
-	public function Get_fields(Array $hash=null) : array
-	{
-        $fields = array();
-        foreach ($this->role_obj->attributes as $i => $v) {
-			if (!empty($hash) && isset($hash[$v])) {
-            	$fields[$i] = $this->hash[$v];
-			} else {
-            	$fields[$i] = $this->Out_hash[$v];
-			}
+        if (empty($this->Out_hash[$attrs[0]])) {
+            return new Gerror(1032);
         }
 
-		return $fields;
-	}
+        return null;
+    }
 
-    public function Authenticate(string $login=null, string $password=null): ?Gerror
+    public function Get_fields(array $hash = null): array
+    {
+        $fields = array();
+        foreach ($this->role_obj->attributes as $i => $v) {
+            if (!empty($hash) && isset($hash[$v])) {
+                $fields[$i] = $this->hash[$v];
+            } else {
+                $fields[$i] = $this->Out_hash[$v];
+            }
+        }
+
+        return $fields;
+    }
+
+    public function Authenticate(string $login = null, string $password = null): ?Gerror
     {
         $issuer = $this->Get_issuer();
-		$pars = $issuer->provider_pars;
+        $pars = $issuer->provider_pars;
         if (empty($pars["Def_login"]) || empty($pars["Def_password"]) || $login != $pars["Def_login"] || $password !== $pars["Def_password"]) {
             return new Gerror(1031);
         }
@@ -150,9 +153,10 @@ class Ticket extends Access
             if ($val->default) {
                 return $key;
             }
-            if (empty($one)) {$one = $key;}
+            if (empty($one)) {
+                $one = $key;
+            }
         }
         return $one;
     }
-
 }

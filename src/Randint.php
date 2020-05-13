@@ -1,5 +1,6 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
 
 namespace Genelet;
 
@@ -22,7 +23,7 @@ function encryptInteger(int $int, string $key): string
     $nonce = random_bytes(24);
     return sodium_bin2hex(
         $nonce .
-        sodium_crypto_secretbox($littleEndian, $nonce, $key)
+            sodium_crypto_secretbox($littleEndian, $nonce, $key)
     );
 }
 

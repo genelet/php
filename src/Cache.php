@@ -1,5 +1,6 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
 
 namespace Genelet;
 
@@ -56,7 +57,9 @@ class Cache extends Base implements \Psr\SimpleCache\CacheInterface
     {
         $path = $this->full($key);
         $data = file_get_contents($path);
-        if ($data === false) {return $default;}
+        if ($data === false) {
+            return $default;
+        }
         return $data;
     }
 
@@ -111,5 +114,4 @@ class Cache extends Base implements \Psr\SimpleCache\CacheInterface
         }
         return $ok;
     }
-
 }

@@ -1,5 +1,7 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Genelet\Tests;
 
 use PHPUnit\Framework\TestCase;
@@ -71,5 +73,4 @@ final class BaseTest extends TestCase
         $str = $base->Handler_logout();
         $this->assertEquals("/", $str);
     }
-
 }

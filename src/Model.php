@@ -1,5 +1,6 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
 
 namespace Genelet;
 
@@ -34,21 +35,21 @@ class Model extends Crud
 
     public $Total_force;
 
-	private $role_name;
-	private $tag_name;
+    private $role_name;
+    private $tag_name;
 
-// I may move pdo to Set_default so nextpage shares the same pdo as caller?
+    // I may move pdo to Set_default so nextpage shares the same pdo as caller?
     public function __construct(\PDO $pdo, object $comp)
     {
         self::Initialize($comp);
-		if (isset($this->Current_tables)) {
-        	parent::__construct($pdo, $this->Current_table, $this->Current_tables);
-		} else {
-        	parent::__construct($pdo, $this->Current_table);
-		}
+        if (isset($this->Current_tables)) {
+            parent::__construct($pdo, $this->Current_table, $this->Current_tables);
+        } else {
+            parent::__construct($pdo, $this->Current_table);
+        }
     }
 
-    public function Set_defaults(array $args, array $lists, array $other, array $storage=null, Logger $logger=null, string $role=null, string $tag=null)
+    public function Set_defaults(array $args, array $lists, array $other, array $storage = null, Logger $logger = null, string $role = null, string $tag = null)
     {
         $this->ARGS = $args;
         $this->LISTS = $lists;
@@ -59,23 +60,23 @@ class Model extends Crud
         if ($logger != null) {
             $this->logger = $logger;
         }
-		if ($role != null) {
-			$this->role_name = $role;
-		}
-		if ($tag != null) {
-			$this->tag_name = $tag;
-		}
+        if ($role != null) {
+            $this->role_name = $role;
+        }
+        if ($tag != null) {
+            $this->tag_name = $tag;
+        }
     }
 
-	public function Get_rolename()
-	{
-		return $this->role_name;
-	}
+    public function Get_rolename()
+    {
+        return $this->role_name;
+    }
 
-	public function Get_tagname()
-	{
-		return $this->tag_name;
-	}
+    public function Get_tagname()
+    {
+        return $this->tag_name;
+    }
 
     private function Initialize(object $comp)
     {
@@ -91,35 +92,35 @@ class Model extends Crud
         if (isset($comp->{"nextpages"})) {
             $this->Nextpages = array();
             foreach ($comp->{"nextpages"} as $action => $obj_ms) {
-				$ms = array();
-				foreach ($obj_ms as $obj_m) {
-					$table = array();
-					foreach ($obj_m as $k => $v) {
-						if ($k=="relate_item") {
-							$table[$k] = array();
-							foreach ($v as $kk => $vv) {
-								$table[$k][$kk] = $vv;
-							}
-						} else {
-							$table[$k] = $v;
-						}
-					}
-					array_push($ms, $table);
-				}
-				$this->Nextpages[$action] = $ms;
-			}
+                $ms = array();
+                foreach ($obj_ms as $obj_m) {
+                    $table = array();
+                    foreach ($obj_m as $k => $v) {
+                        if ($k == "relate_item") {
+                            $table[$k] = array();
+                            foreach ($v as $kk => $vv) {
+                                $table[$k][$kk] = $vv;
+                            }
+                        } else {
+                            $table[$k] = $v;
+                        }
+                    }
+                    array_push($ms, $table);
+                }
+                $this->Nextpages[$action] = $ms;
+            }
         }
 
         $this->Current_table = $comp->{"current_table"};
         if (isset($comp->{"current_tables"})) {
             $this->Current_tables = array();
-			foreach ($comp->{"current_tables"} as $obj_tbl) {
-				$table = array();
-				foreach ($obj_tbl as $k => $v) {
-					$table[$k] = $v;
-				}
-				array_push($this->Current_tables, $table);
-			}
+            foreach ($comp->{"current_tables"} as $obj_tbl) {
+                $table = array();
+                foreach ($obj_tbl as $k => $v) {
+                    $table[$k] = $v;
+                }
+                array_push($this->Current_tables, $table);
+            }
         }
         if (isset($comp->{"current_key"})) {
             $this->Current_key = $comp->{"current_key"};
@@ -147,7 +148,7 @@ class Model extends Crud
         }
 
         if (isset($comp->{"topics_hash"})) {
-			$this->Topics_hashpars = array();
+            $this->Topics_hashpars = array();
             foreach ($comp->{"topics_hash"} as $k => $v) {
                 $this->Topics_hashpars[$k] = $v;
             }
@@ -207,8 +208,12 @@ class Model extends Crud
         $ARGS = $this->ARGS;
         $outs = array();
         foreach ($vs as $v) {
-            if (isset($extra[$v])) {array_push($outs, $extra[$v]);}
-            if (isset($ARGS[$v])) {array_push($outs, $ARGS[$v]);}
+            if (isset($extra[$v])) {
+                array_push($outs, $extra[$v]);
+            }
+            if (isset($ARGS[$v])) {
+                array_push($outs, $ARGS[$v]);
+            }
             return null;
         }
 
@@ -219,9 +224,11 @@ class Model extends Crud
     {
         $id = $this->Current_key;
         $val = (gettype($id) == "array")
-        ? $this->properValues($id, $extra)
-        : $this->properValue($id, $extra);
-        if ($val == null) {return array($id);}
+            ? $this->properValues($id, $extra)
+            : $this->properValue($id, $extra);
+        if ($val == null) {
+            return array($id);
+        }
         return array($id, $val);
     }
 
@@ -237,23 +244,27 @@ class Model extends Crud
             } elseif ($this->Total_force == -1 || empty($ARGS[$totalno])) {
                 $hash = array();
                 $err = $this->Total_hash($hash, $totalno, ...$extra);
-                if ($err != null) {return $err;}
+                if ($err != null) {
+                    return $err;
+                }
                 $nt = $hash[$totalno];
             } else {
-            	$nt = $ARGS[$totalno];
-			}
+                $nt = $ARGS[$totalno];
+            }
             $this->ARGS[$totalno] = $nt;
             $nr = $ARGS[$this->ROWCOUNT];
             $this->ARGS[$this->MAXPAGENO] = floor(($nt - 1) / $nr) + 1;
-			$this->OTHER[$totalno] = $nt;
-			$this->OTHER[$this->MAXPAGENO] = $this->ARGS[$this->MAXPAGENO];
+            $this->OTHER[$totalno] = $nt;
+            $this->OTHER[$this->MAXPAGENO] = $this->ARGS[$this->MAXPAGENO];
         }
 
         $fields = (empty($this->Topics_hashpars)) ? // user may supply field=,,,
-        $this->filtered_fields($this->Topics_pars) :
-        $this->Topics_hashpars;
+            $this->filtered_fields($this->Topics_pars) :
+            $this->Topics_hashpars;
         $err = $this->Topics_hash($this->LISTS, $fields, $this->get_order_string(), ...$extra);
-        if ($err != null) {return $err;}
+        if ($err != null) {
+            return $err;
+        }
 
         return $this->process_after("topics", ...$extra);
     }
@@ -262,23 +273,29 @@ class Model extends Crud
     {
         $val2 = $this->get_id_val((!empty($extra)) ? $extra[0] : null);
         $id = array_shift($val2);
-        if (empty($val2)) {return new Gerror(1040, $id);}
+        if (empty($val2)) {
+            return new Gerror(1040, $id);
+        }
         $val = $val2[0]; // two elements and the second is the val
 
         $field_values = $this->filtered_fields($this->Edit_pars);
-        if (empty($field_values)) {return new Gerror(1077);}
+        if (empty($field_values)) {
+            return new Gerror(1077);
+        }
 
-		if (isset($extra[0]) && isset($extra[0][$id])) {
-			unset($extra[0][$id]); // redundant select condition
-		}
+        if (isset($extra[0]) && isset($extra[0][$id])) {
+            unset($extra[0][$id]); // redundant select condition
+        }
 
         $err = $this->Edit_hash($this->LISTS, $field_values, array($id => $val), ...$extra);
-        if ($err != null) {return $err;}
+        if ($err != null) {
+            return $err;
+        }
 
         return $this->process_after("edit", ...$extra);
     }
 
-// use 'extra' to override field_values for selected fields
+    // use 'extra' to override field_values for selected fields
     public function insert(...$extra): ?Gerror
     {
         $field_values = $this->get_fv($this->Insert_pars);
@@ -290,10 +307,14 @@ class Model extends Crud
                 }
             }
         }
-        if (empty($field_values)) {return new Gerror(1078);}
+        if (empty($field_values)) {
+            return new Gerror(1078);
+        }
 
         $err = $this->Insert_hash($field_values);
-        if ($err != null) {return $err;}
+        if ($err != null) {
+            return $err;
+        }
 
         if (isset($this->Current_id_auto)) {
             $field_values[$this->Current_id_auto] = $this->Last_id;
@@ -306,7 +327,9 @@ class Model extends Crud
 
     public function insupd(...$extra): ?Gerror
     {
-        if (empty($this->Insupd_pars)) {return new Gerror(1078);}
+        if (empty($this->Insupd_pars)) {
+            return new Gerror(1078);
+        }
         $uniques = $this->Insupd_pars;
 
         $field_values = $this->get_fv($this->Insert_pars);
@@ -317,20 +340,26 @@ class Model extends Crud
                 }
             }
         }
-        if (empty($field_values)) {return new Gerror(1078);}
+        if (empty($field_values)) {
+            return new Gerror(1078);
+        }
 
         foreach ($uniques as $v) {
-            if (empty($field_values[$v])) {return new Gerror(1075, $v);}
+            if (empty($field_values[$v])) {
+                return new Gerror(1075, $v);
+            }
         }
 
         $upd_field_values = $this->get_fv($this->Update_pars);
 
         $s_hash = "";
         $keys = isset($this->Current_keys)
-        ? $this->Current_keys
-        : array($this->Current_key);
+            ? $this->Current_keys
+            : array($this->Current_key);
         $err = $this->Insupd_hash($field_values, $upd_field_values, $keys, $uniques, $s_hash);
-        if ($err != null) {return $err;}
+        if ($err != null) {
+            return $err;
+        }
 
         if (isset($this->Current_id_auto) && $s_hash == "insert") {
             $field_values[$this->Current_id_auto] = $this->Last_id;
@@ -345,11 +374,15 @@ class Model extends Crud
     {
         $val2 = $this->get_id_val((!empty($extra)) ? $extra[0] : null);
         $id = array_shift($val2);
-        if (empty($val2)) {return new Gerror(1040, $id);}
+        if (empty($val2)) {
+            return new Gerror(1040, $id);
+        }
         $val = $val2[0];
 
         $field_values = $this->get_fv($this->Update_pars);
-        if (empty($field_values)) {return new Gerror(1074);}
+        if (empty($field_values)) {
+            return new Gerror(1074);
+        }
 
         if (count($field_values) == 1 && isset($field_values[$id])) {
             $this->LISTS = array($field_values);
@@ -358,7 +391,9 @@ class Model extends Crud
 
         $ARGS = $this->ARGS;
         $err = $this->Update_hash_nulls($field_values, array($id => $val), isset($ARGS[$this->EMPTIES]) ? $ARGS[$this->EMPTIES] : null, ...$extra);
-        if ($err != null) {return $err;}
+        if ($err != null) {
+            return $err;
+        }
 
         $this->LISTS = array($field_values);
 
@@ -369,20 +404,26 @@ class Model extends Crud
     {
         $val2 = $this->get_id_val((!empty($extra)) ? $extra[0] : null);
         $id = array_shift($val2);
-        if (empty($val2)) {return new Gerror(1040, $id);}
+        if (empty($val2)) {
+            return new Gerror(1040, $id);
+        }
         $val = $val2[0];
 
         if (isset($this->Key_in)) {
             foreach ($this->Key_in as $table => $keyname) {
                 foreach ($val as $v) {
                     $err = $this->existing($table, $keyname, $v);
-                    if ($err != null) {return $err;}
+                    if ($err != null) {
+                        return $err;
+                    }
                 }
             }
         }
 
         $err = $this->Delete_hash(array($id => $val), ...$extra);
-        if ($err != null) {return $err;}
+        if ($err != null) {
+            return $err;
+        }
 
         $field_values = array();
         if (gettype($id) == "array") {
@@ -400,10 +441,17 @@ class Model extends Crud
     public function existing(string $table, string $field, $val): ?Gerror
     {
         $hash = array();
-        $err = $this->Get_args($hash,
-            "SELECT " . $field . " FROM " . $table . " WHERE " . $field . "=?", $val);
-        if ($err != null) {return $err;}
-        if (!empty($hash[$field])) {return new Gerror(1075);}
+        $err = $this->Get_args(
+            $hash,
+            "SELECT " . $field . " FROM " . $table . " WHERE " . $field . "=?",
+            $val
+        );
+        if ($err != null) {
+            return $err;
+        }
+        if (!empty($hash[$field])) {
+            return new Gerror(1075);
+        }
 
         return null;
     }
@@ -422,7 +470,9 @@ class Model extends Crud
         for ($i = 0; $i < $trials; $i++) {
             $val = rand($mi, $ma);
             $err = $this->existing($table, $field, $val);
-            if ($err != null) {continue;}
+            if ($err != null) {
+                continue;
+            }
             $this->ARGS[$field] = $val;
             return null;
         }
@@ -438,19 +488,21 @@ class Model extends Crud
             $column = $ARGS[$this->SORTBY];
         } elseif (isset($this->Current_tables)) {
             $table = $this->Current_tables[0];
-			if (isset($table["sortby"])) {
-				$column = $table["sortby"];
-			} else {
-            	$name = isset($table["alias"]) ? $table["alias"] : $table["name"];
-            	$name .= ".";
-            	$column = $name . ((gettype($this->Current_key) == "array") ? implode(", $name", $this->Current_key) : $this->Current_key);
-			}
+            if (isset($table["sortby"])) {
+                $column = $table["sortby"];
+            } else {
+                $name = isset($table["alias"]) ? $table["alias"] : $table["name"];
+                $name .= ".";
+                $column = $name . ((gettype($this->Current_key) == "array") ? implode(", $name", $this->Current_key) : $this->Current_key);
+            }
         } else {
             $column = (gettype($this->Current_key) == "array") ? implode(", ", $this->Current_key) : $this->Current_key;
         }
 
         $order = "ORDER BY " . $column;
-        if (isset($ARGS[$this->SORTREVERSE])) {$order .= " DESC";}
+        if (isset($ARGS[$this->SORTREVERSE])) {
+            $order .= " DESC";
+        }
 
         if (isset($ARGS[$this->ROWCOUNT])) {
             $rowcount = $ARGS[$this->ROWCOUNT];
@@ -487,7 +539,9 @@ class Model extends Crud
 
         $args = array();
         foreach ($this->ARGS as $k => $v) {
-            if ($k == "sortby" || $k == "sortreverse") {continue;}
+            if ($k == "sortby" || $k == "sortreverse") {
+                continue;
+            }
             $args[$k] = $v;
         }
 
@@ -505,7 +559,9 @@ class Model extends Crud
         $other = array();
         $p->Set_defaults($args, $lists, $other, $this->Storage, $this->logger);
         $err = $p->$action(...$extra);
-        if ($err !== null) {return $err;}
+        if ($err !== null) {
+            return $err;
+        }
         if (!empty($p->LISTS)) {
             $item[$marker] = $p->LISTS;
         }
@@ -524,16 +580,20 @@ class Model extends Crud
 
     public function call_nextpage(array $page, ...$extra): ?Gerror
     {
-        if (empty($this->LISTS)) {return null;}
+        if (empty($this->LISTS)) {
+            return null;
+        }
 
-        foreach ($this->LISTS as $i=>$item) {
+        foreach ($this->LISTS as $i => $item) {
             foreach ($page["relate_item"] as $k => $v) {
                 if (!empty($item[$k])) {
                     $extra[0][$v] = $item[$k];
                 }
             }
             $err = $this->another_object($this->LISTS[$i], $page, ...$extra);
-            if ($err !== null) {return $err;}
+            if ($err !== null) {
+                return $err;
+            }
         }
 
         return null;
@@ -541,15 +601,18 @@ class Model extends Crud
 
     public function process_after(string $action, ...$extra): ?Gerror
     {
-        if (empty($this->Nextpages) || empty($this->Nextpages[$action])) {return null;}
+        if (empty($this->Nextpages) || empty($this->Nextpages[$action])) {
+            return null;
+        }
         foreach ($this->Nextpages[$action] as $k => $page) {
             if (!empty($extra)) {
                 array_shift($extra);
             }
             $err = (empty($page["relate_item"])) ? $this->call_once($page, ...$extra) : $this->call_nextpage($page, ...$extra);
-            if ($err !== null) {return $err;}
+            if ($err !== null) {
+                return $err;
+            }
         }
         return null;
     }
-
 }
