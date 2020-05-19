@@ -216,8 +216,6 @@ class Filter extends Access
 			}
 		}
 		if (!$this->Is_public()) {
-			$idname = $this->Get_idname();
-			$value_idname = $this->ARGS[$idname];
 			$model->OTHER[$this->csrf_name] = $this->TokenWithinLogin(intval($_SERVER["REQUEST_TIME"]));
 		}
 		if ($_SERVER["REQUEST_METHOD"] === "GET" || $_SERVER["REQUEST_METHOD"] === "GET_item") {
