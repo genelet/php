@@ -46,9 +46,7 @@ final class FilterTest extends TestCase
     public function testFilterCan(): void
     {
         $filter = new Filter(self::init(), "startnew", "testing", json_decode(file_get_contents("conf/test.conf")), "cc", "e", "db");
-        $ARGS = &$filter->ARGS;
         $_REQUEST["x"] = "bbb";
-        $this->assertEquals("bbb", $ARGS["x"]);
         $this->assertEquals("cc", $filter->actionHash["groups"][0]);
         $this->assertEquals("m", $filter->actionHash["groups"][1]);
         $this->assertTrue($filter->Is_public());
@@ -56,18 +54,14 @@ final class FilterTest extends TestCase
         $this->assertFalse($filter->Is_normal_role());
 
         $filter = new Filter(self::init(), "filter", "testing", json_decode(file_get_contents("conf/test.conf")), "a", "e", "db");
-        $ARGS = &$filter->ARGS;
         $this->assertFalse($filter->Is_public());
         $this->assertTrue($filter->Is_admin());
         $this->assertFalse($filter->Is_normal_role());
 
         $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("conf/test.conf")), "m", "e", "db");
-        $ARGS = &$filter->ARGS;
         $_REQUEST["m_id"] = 100;
         $_REQUEST["x"] = "bbb";
         $_REQUEST["y"] = ["ccc", "ddd"];
-        $this->assertEquals("bbb", $ARGS["x"]);
-        $this->assertEquals("ccc", $ARGS["y"][0]);
         $this->assertTrue($filter->Role_can());
         $this->assertTrue($filter->Is_normal_role());
         $this->assertFalse($filter->Is_admin());
@@ -78,7 +72,6 @@ final class FilterTest extends TestCase
     {
         $_SERVER["X-Forwarded-ID"] = 4;
         $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("conf/test.conf")), "m", "e", "db");
-        $ARGS = &$filter->ARGS;
 
         $pdo = new \PDO(...$filter->db);
         $model = new Model($pdo, self::init());
@@ -107,7 +100,6 @@ final class FilterTest extends TestCase
             array("eee", "vvv", "1")
         );
         $this->assertNull($err);
-
         $err = $filter->Preset();
         $this->assertNull($err);
 
@@ -119,28 +111,29 @@ final class FilterTest extends TestCase
 
         $_REQUEST["id"] = 4;
         unset($_REQUEST["m_id"]);
+		$model->ARGS = $_REQUEST;
         $err = $filter->Before($model, $extra, $nextextras);
         $this->assertIsObject($err);
         $this->assertEquals(1041, $err->error_code);
 
-        $_REQUEST["m_id"] = 100;
+        $model->ARGS["m_id"] = 100;
         $err = $filter->Before($model, $extra, $nextextras);
         $this->assertNull($err);
 
         $filter->fkArray[0] = "junk0";
-        $_REQUEST["junk0"] = "junk1";
+        $model->ARGS["junk0"] = "junk1";
         $err = $filter->Before($model, $extra, $nextextras);
         $this->assertIsObject($err);
         $this->assertEquals(1054, $err->error_code);
 
         $filter->fkArray[1] = "junk_md5";
-        $_REQUEST["junk_md5"] = "aaaa";
+        $model->ARGS["junk_md5"] = "aaaa";
         $err = $filter->Before($model, $extra, $nextextras);
         $this->assertIsObject($err);
         $this->assertEquals(1052, $err->error_code);
 
         // Endtime=0
-        $_REQUEST["junk_md5"] = "j0aaXgvlb-w_60PM_xHTLrClN4sP20e2-M713anfTv0";
+        $model->ARGS["junk_md5"] = "j0aaXgvlb-w_60PM_xHTLrClN4sP20e2-M713anfTv0";
         $err = $filter->Before($model, $extra, $nextextras);
         $this->assertNull($err);
     }
@@ -149,7 +142,6 @@ final class FilterTest extends TestCase
     {
         $_SERVER["X-Forwarded-ID"] = 4;
         $filter = new Filter(self::init(), "edit", "testing", json_decode(file_get_contents("conf/test.conf")), "m", "e", "db");
-        $ARGS = &$filter->ARGS;
 
         $pdo = new \PDO(...$filter->db);
         $model = new Model($pdo, self::init());
@@ -184,6 +176,7 @@ final class FilterTest extends TestCase
         $filter->fkArray[2] = "junk0";
         $filter->fkArray[3] = "junk_md5";
         $model->LISTS = [["junk0" => "junk1", "x" => "aa", "y" => "bb"]];
+		$model->ARGS = $_REQUEST;
         $err = $filter->After($model);
         $this->assertNull($err);
         $list0 = $model->LISTS[0];

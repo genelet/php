@@ -31,7 +31,7 @@ class Procedure extends Ticket
         $this->logger->info($call_name);
         $this->logger->info($in_vals);
         $this->logger->info($out_pars);
-        return (strtolower(substr($call_name, 0, 7)) === "select ") ?
+        return (strtolower(substr($call_name, 0, 7)) == "select ") ?
             $this->dbi->Get_sql_label($this->Out_hash, $out_pars, $call_name, ...$in_vals) :
             $this->dbi->Do_proc_label($this->Out_hash, $out_pars, $call_name, ...$in_vals);
     }

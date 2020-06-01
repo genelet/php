@@ -6,7 +6,6 @@ namespace Genelet;
 
 class Filter extends Access
 {
-	public $ARGS;
 	private $oncepages;
 
 	public $Action; //		string
@@ -24,7 +23,6 @@ class Filter extends Access
 		$this->Action = $a_name;
 		$this->Component = $c_name;
 		self::Initialize($comp);
-		$this->ARGS = &$_REQUEST;
 	}
 
 	private function Initialize(object $comp): void
@@ -88,17 +86,17 @@ class Filter extends Access
 		return array_search($this->Role_name, $this->actionHash["groups"]) >= 0;
 	}
 
-	private function DigestWithinLogin(string $str): string
+	private function DigestWithinLogin(array $ARGS, string $str): string
 	{
 		$idname = $this->Get_idname();
-		$value_idname = $this->ARGS[$idname];
+		$value_idname = $ARGS[$idname];
 		return $this->Digest($this->Role_name . $idname . $value_idname . $str);
 	}
 
-	private function TokenWithinLogin(int $stamp): string
+	private function TokenWithinLogin(array $ARGS, int $stamp): string
 	{
 		$idname = $this->Get_idname();
-		$value_idname = $this->ARGS[$idname];
+		$value_idname = $ARGS[$idname];
 		return $this->Token($stamp, $this->Role_name . $idname . $value_idname);
 	}
 
@@ -142,7 +140,7 @@ class Filter extends Access
 			}
 			$token = $_POST[$this->csrf_name];
 			$stamp = Access::Get_tokentime($token);
-			if ($token !== $this->TokenWithinLogin($stamp)) {
+			if ($token !== $this->TokenWithinLogin($_REQUEST, $stamp)) {
 				return new Gerror(3210);
 			}
 		}
@@ -152,7 +150,7 @@ class Filter extends Access
 
 	public function Before(object &$model, array &$extra, array &$nextextra, array &$onceextra = null): ?Gerror
 	{
-		$ARGS = $this->ARGS;
+		$ARGS = $model->ARGS;
 		if (isset($this->actionHash["validate"])) {
 			foreach ($this->actionHash["validate"] as $k) {
 				if (empty($ARGS[$k])) {
@@ -160,9 +158,11 @@ class Filter extends Access
 				}
 			}
 		}
-		foreach ($model->Topics_pars as $k) {
-			if (isset($ARGS[$k])) {
-				$extra[$k] = $ARGS[$k];
+		if ($this->Action == 'topics') {
+			foreach ($model->Topics_pars as $k) {
+				if (isset($ARGS[$k])) {
+					$extra[$k] = $ARGS[$k];
+				}
 			}
 		}
 		if (isset($this->fkArray) && isset($this->fkArray[0])) {
@@ -179,7 +179,7 @@ class Filter extends Access
 				return new Gerror(1054);
 			}
 			$md5 = $ARGS[$this->fkArray[1]];
-			if ($ARGS[$this->fkArray[1]] != $this->DigestWithinLogin($name . $value)) {
+			if ($ARGS[$this->fkArray[1]] != $this->DigestWithinLogin($ARGS, $name . $value)) {
 				return new Gerror(1052);
 			}
 		}
@@ -189,6 +189,7 @@ class Filter extends Access
 
 	public function After(object $model, array $onceextra = null): ?Gerror
 	{
+		$ARGS = $model->ARGS;
 		if (isset($this->oncepages) && isset($this->oncepages[$this->Action])) {
 			foreach ($this->oncepages[$this->Action] as $page) {
 				$err = $model->call_once($page, ...$onceextra);
@@ -209,7 +210,7 @@ class Filter extends Access
 						continue;
 					}
 					$value = $item[$name];
-					$item[$fk[3]] = $this->DigestWithinLogin($name . $value);
+					$item[$fk[3]] = $this->DigestWithinLogin($ARGS, $name . $value);
 				}
 				array_shift($fk);
 				array_shift($fk);
@@ -217,13 +218,13 @@ class Filter extends Access
 		}
 		if (!$this->Is_public()) {
 			$idname = $this->Get_idname();
-			$value_idname = $this->ARGS[$idname];
-			$model->OTHER[$this->csrf_name] = $this->TokenWithinLogin(intval($_SERVER["REQUEST_TIME"]));
+			$value_idname = $ARGS[$idname];
+			$model->OTHER[$this->csrf_name] = $this->TokenWithinLogin($ARGS, intval($_SERVER["REQUEST_TIME"]));
 		}
 		if ($_SERVER["REQUEST_METHOD"] === "GET" || $_SERVER["REQUEST_METHOD"] === "GET_item") {
 			$name = "";
 			if ($this->Action == $this->default_actions["GET_item"]) {
-				$name = $_REQUEST[$this->current_key];
+				$name = $ARGS[$this->current_key];
 			} else {
 				$name = $this->Action;
 				if (!empty($_GET)) {

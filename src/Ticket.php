@@ -27,7 +27,7 @@ class Ticket extends Access
         }
         foreach (explode("&", parse_url($_SERVER["REQUEST_URI"], PHP_URL_QUERY)) as $item) {
             $len = strlen($this->go_uri_name);
-            if (substr($item, 0, $len + 1) === $this->go_uri_name . "=") {
+            if (substr($item, 0, $len + 1) == $this->go_uri_name . "=") {
                 return urldecode(substr($item, $len + 1));
             }
         }
@@ -84,7 +84,7 @@ class Ticket extends Access
             $this->Uri = $this->probe_value($_COOKIE[$probe_name]);
         }
 
-        if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_REQUEST[$err_name])) {
+        if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_REQUEST[$err_name])) {
             return new Gerror(intval($_REQUEST[$err_name]));
         }
 
