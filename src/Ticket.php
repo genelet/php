@@ -7,7 +7,7 @@ namespace Genelet;
 class Ticket extends Access
 {
     public $Uri;
-    public $Out_hash; #map[string]interface{}
+    public $Out_hash;
     public $Provider;
 
     private $basic;
@@ -118,7 +118,7 @@ class Ticket extends Access
         $fields = array();
         foreach ($this->role_obj->attributes as $i => $v) {
             if (!empty($hash) && isset($hash[$v])) {
-                $fields[$i] = $this->hash[$v];
+                $fields[$i] = $hash[$v];
             } else {
                 $fields[$i] = $this->Out_hash[$v];
             }
