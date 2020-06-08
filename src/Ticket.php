@@ -84,7 +84,7 @@ class Ticket extends Access
             $this->Uri = $this->probe_value($_COOKIE[$probe_name]);
         }
 
-        if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_REQUEST[$err_name])) {
+        if ($_SERVER["REQUEST_METHOD"]=="GET" && isset($_REQUEST[$err_name])) {
             return new Gerror(intval($_REQUEST[$err_name]));
         }
 
@@ -144,19 +144,5 @@ class Ticket extends Access
     public function Get_issuer(): object
     {
         return $this->role_obj->issuers[$this->Provider];
-    }
-
-    public function Get_provider(): string
-    {
-        $one = "";
-        foreach ($this->role_obj->issuers as $key => $val) {
-            if ($val->default) {
-                return $key;
-            }
-            if (empty($one)) {
-                $one = $key;
-            }
-        }
-        return $one;
     }
 }

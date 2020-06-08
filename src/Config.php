@@ -151,7 +151,7 @@ class Config
 	public $oauth2s;
 	public $oauth1s;
 
-	protected $original;
+	public $original;
 
 	protected $action_name;
 	protected $provider_name;

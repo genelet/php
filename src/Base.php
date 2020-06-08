@@ -58,6 +58,20 @@ class Base extends Config
         return $this->role_obj->idname;
     }
 
+    public function Get_provider(): string // get default provider
+    {
+        $one = "";
+        foreach ($this->role_obj->issuers as $key => $val) {
+            if ($val->default) {
+                return $key;
+            }
+            if (empty($one)) {
+                $one = $key;
+            }
+        }
+        return $one;
+    }
+
     public function Get_ip(): string
     {
         if (isset($_SERVER['HTTP_CLIENT_IP'])) {
