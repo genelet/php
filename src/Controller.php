@@ -94,7 +94,7 @@ class Controller extends Config
             $logger->info("ID from URL.");
             $_REQUEST[$filter->current_key] = $url_key;
         }
-        $OLD = $_REQUEST;
+        // $OLD = $_REQUEST;
 
         if (!$filter->Is_public()) {
             $logger->info("check authentication for not public role.");
@@ -104,15 +104,23 @@ class Controller extends Config
             } else {
                 $err = $filter->Verify_cookie($_REQUEST[$surface]);
                 unset($_REQUEST[$surface]);
-                unset($OLD[$surface]);
             }
             if ($err != null) {
                 $logger->info("ticket check failed.");
                 if ($is_json) {
                     header("Content-Type: application/json");
-                    header('WWW-Authenticate: Bearer realm="' . $filter->script . "/" . $filter->Role_name . "/" . $filter->Tag_name . "/" . $filter->login_name . '", charset="UTF-8"');
-                    header("Tabilet-Error: " . $err->error_code);
-                    header("Tabilet-Error-Description: " . $err->error_string);
+					$def_provider = $filter->Get_provider();
+					if ($this->Is_oauth2($def_provider)) {
+						$t = new Oauth2(new Dbi($this->pdo, $this->logger), null, $role_name, $tag_name, $def_provider);
+						$t->App_authorize();
+						header('WWW-Authenticate: Bearer realm="'.urlencode($t->Uri).'", , charset="UTF-8"');
+						header("Tabilet-Error: " . $def_provider);
+						header("Tabilet-Error-Description: " . $t->Uri);
+					} else {
+						header('WWW-Authenticate: Bearer realm="' . $filter->script . "/" . $filter->Role_name . "/" . $filter->Tag_name . "/" . $filter->login_name . '", charset="UTF-8"');
+						header("Tabilet-Error: " . $err->error_code);
+						header("Tabilet-Error-Description: " . $err->error_string);
+					}
                     $response->code = 401;
                     return $response->with_error($err);
                 }
@@ -193,7 +201,7 @@ class Controller extends Config
         }
 
         $logger->info("end page, and sending to browser.");
-        return $response->with_results(["success" => true, "incoming" => $OLD, "data" => $model->LISTS, "included" => $model->OTHER]);
+        return $response->with_results(["success" => true, "incoming" => $_REQUEST, "data" => $model->LISTS, "included" => $model->OTHER]);
     }
 
     private static function cross_domain(): void
