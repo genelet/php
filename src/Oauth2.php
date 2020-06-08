@@ -92,14 +92,30 @@ class Oauth2 extends Procedure
         $this->Defaults = $a;
     }
 
-    public function Build_authorize(string $state = null, string $uri = null): ?Gerror
+	public function App_authorize(string $query = null): ?Gerror
+	{
+		$uri = parse_url($this->Defaults["landing"]);
+		$path_arr = explode("/", $uri["path"]);
+		$path_arr[sizeof($path_arr)-2] = isset($this->Defaults["json"]) ? $this->Defaults["json"] : "json";
+		$state = implode("/", $path_arr);
+		if (!empty($uri["query"])) {
+			$state .=  "?" . $uri["query"];
+		}
+		if (isset($query)) {
+			$state .= empty($uri["query"]) ? "?" : "&";
+			$state .= $query;
+		}
+		return $this->Build_authorize($state);
+	}
+
+    public function Build_authorize(string $state = null): ?Gerror
     {
         $defaults = $this->Defaults;
         $cbk = $defaults["callback_url"];
 
         $dest = $defaults["authorize_url"] . "?client_id=" . $defaults["client_id"] . "&redirect_uri=" . urlencode($cbk);
         if (isset($state)) {
-            $defaults["state"] = $state;
+            $defaults["state"] = urlencode($state);
         }
         foreach (array("scope", "display", "state", "response_type", "access_type", "approval_prompt") as $k) {
             if (isset($defaults[$k])) {
@@ -117,22 +133,22 @@ class Oauth2 extends Procedure
         $issuer = $this->Get_issuer();
         $cred = $issuer->credential;
         if (empty($_REQUEST[$cred[0]])) {
-            return $this->Build_authorize($_SERVER["REQUEST_TIME"] . "");
+            return $this->Build_authorize(); // web flow, state is "landing"
         }
 
         $defaults = $this->Defaults;
-        $landing  = "/";
-        if (isset($defaults["landing"])) {
-            $landing = $defaults["landing"];
-        }
-        $this->Uri = $landing;
+		if (isset($_REQUEST["state"])) {
+			$this->Uri = urldecode($_REQUEST["state"]);
+		} else if (isset($defaults["landing"])) {
+			$this->Uri = $defaults["landing"];
+		} else {
+			$this->Uri = "/";
+		}
+
         $form = array(
             "code" => $_REQUEST[$cred[0]],
             "redirect_uri" => $defaults["callback_url"]
         );
-        if (isset($_REQUEST["state"])) {
-            $form["state"] = $_REQUEST["state"];
-        }
         if (isset($defaults["grant_type"])) {
             $form["grant_type"] = $defaults["grant_type"];
         }
